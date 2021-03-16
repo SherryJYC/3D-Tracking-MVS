@@ -10,3 +10,4 @@ Course project for 3DV 2021 Spring @ ETH Zurich
 ## Useful Github repo
 [Full pipeline: POM+DeepOcculusion+pyKSP](https://www.epfl.ch/labs/cvlab/research/research-surv/research-body-surv-index-php/) <br/>
 [Soccer player tracking system](https://github.com/AndresGalaviz/Football-Player-Tracking)
+[CVPR2020: How To Train Your Deep Multi-Object Tracker](https://github.com/yihongXU/deepMOT)
