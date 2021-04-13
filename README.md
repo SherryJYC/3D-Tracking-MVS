@@ -10,16 +10,19 @@ python src/utils/v2img.py --pathIn=data/0125-0135/CAM1/CAM1.mp4 --pathOut=data/0
 ```
 python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/CAM1/calib.txt --img_dir=data/0125-0135/CAM1/img --output_dir=data/0125-0135/CAM1/img_static
 ```
-
+- Convert ground truth/annotation json to text file
+```
+python src/utils/json2txt.py
+```
 - After processing, data folder structure:
 ```
 data
 ├── 0125-0135
-│   ├── CAM1
-│   │   ├── img
-│   │   └── img_static
-│   └── RIGHT
-│       └── img
+│   ├── CAM1
+│   │   ├── img
+│   │   └── img_static
+│   └── RIGHT
+│       └── img
 └── calibration_results
     └── 0125-0135
         ├── CAM1

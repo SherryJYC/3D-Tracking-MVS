@@ -19,15 +19,6 @@ import os
 import skimage.io
 import cv2
 
-# global param
-HEIGHT, WIDTH = 1080,1920
-cx,cy = WIDTH/2., HEIGHT/2.
-woffset = 500
-hoffset = 200
-scale=0.3
-WIDTH+=int(woffset*3)
-HEIGHT+=int(woffset*2)
-
 def config():
     a = argparse.ArgumentParser(description='Simple script for testing a CTracker network.')
     a.add_argument('--calib_file', default='data/calibration_results/0125-0135/CAM1/calib.txt', type=str, help='path to calibration file')
@@ -62,7 +53,7 @@ def Ry(theta):
                   [rsin, 0, rcos]])
     return K
 
-def computeP(line):
+def computeP(line, cx, cy):
     P = np.empty([3,4])
     
     theta, phi, f, Cx, Cy, Cz = line
@@ -85,8 +76,21 @@ def main(args):
     
     assert len(img_list) == len(calib), "total length of image frames and calibration file unmatched !"
     
+    # projection param from proj_config.txt
+    config_file = os.path.join(args.img_dir.split('/')[0], args.img_dir.split('/')[1], 'proj_config.txt')
+    param = np.genfromtxt(config_file, delimiter=',').astype(int)
+    
+    HEIGHT, WIDTH = param[0], param[1]
+    cx,cy = WIDTH/2., HEIGHT/2.
+    woffset = param[2]
+    hoffset = param[3]
+    scale= param[4]/10
+    
+    WIDTH+=int(woffset*3)
+    HEIGHT+=int(woffset*2)
+    
     # project each image to nth frame 
-    P1 = computeP(calib[args.n])
+    P1 = computeP(calib[args.n], cx, cy)
     
     # put reference frame at center
     T = np.eye(3,3)*scale
@@ -95,7 +99,7 @@ def main(args):
     for i, line in enumerate(calib):
         print('projecting image frame {}'.format(i))
         img = skimage.io.imread(img_list[i])  
-        P = computeP(line)      
+        P = computeP(line, cx, cy)      
               
         # compute homography
         H = np.dot(P1, np.linalg.pinv(P))       
@@ -104,7 +108,7 @@ def main(args):
         img = cv2.warpPerspective(img, np.dot(T, H), (WIDTH, HEIGHT))
         
         # write to file
-        cv2.imwrite(os.path.join(args.output_dir, imgname[i]), img)  
+        cv2.imwrite(os.path.join(args.output_dir, imgname[i]), cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  
     return
 
 if __name__ == '__main__':
