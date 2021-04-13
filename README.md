@@ -12,17 +12,23 @@ python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/C
 ```
 - Convert ground truth/annotation json to text file
 ```
-python src/utils/json2txt.py
+python src/utils/json2txt.py --jsonfile=data/0125-0135/0125-0135.json
 ```
-- After processing, data folder structure:
+- After processing, data folder structure should be like:
 ```
 data
 ├── 0125-0135
 │   ├── CAM1
 │   │   ├── img
-│   │   └── img_static
-│   └── RIGHT
-│       └── img
+│   │   ├── img_static
+│   │   └── homo.npy
+│   ├── RIGHT
+│   │   
+│   ├── proj_config.txt
+│   ├── 16m_left.txt
+│   ├── 16m_right.txt
+│   └── id_mapping.txt
+│       
 └── calibration_results
     └── 0125-0135
         ├── CAM1

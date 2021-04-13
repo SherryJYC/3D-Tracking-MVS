@@ -76,6 +76,9 @@ def main(args):
     
     assert len(img_list) == len(calib), "total length of image frames and calibration file unmatched !"
     
+    # homography matrix
+    homo = np.load(os.path.join(args.img_dir[:-len(args.img_dir.split('/')[-1])], 'homo.npy'))
+    
     # projection param from proj_config.txt
     config_file = os.path.join(args.img_dir.split('/')[0], args.img_dir.split('/')[1], 'proj_config.txt')
     param = np.genfromtxt(config_file, delimiter=',').astype(int)
@@ -84,17 +87,18 @@ def main(args):
     cx,cy = WIDTH/2., HEIGHT/2.
     woffset = param[2]
     hoffset = param[3]
-    scale= param[4]/10
+    scale= param[4]
     
     WIDTH+=int(woffset*3)
     HEIGHT+=int(woffset*2)
     
-    # project each image to nth frame 
-    P1 = computeP(calib[args.n], cx, cy)
-    
     # put reference frame at center
     T = np.eye(3,3)*scale
+    T[-1,-1] = 1
     T[0,-1], T[1,-1] = woffset, hoffset
+    
+    # project each image to nth frame 
+    P1 = computeP(calib[args.n], cx, cy)
     
     for i, line in enumerate(calib):
         print('projecting image frame {}'.format(i))
@@ -105,7 +109,7 @@ def main(args):
         H = np.dot(P1, np.linalg.pinv(P))       
         
         # project to 1st frame (frame0.jpg) x1 = Hx
-        img = cv2.warpPerspective(img, np.dot(T, H), (WIDTH, HEIGHT))
+        img = cv2.warpPerspective(img, np.dot(T, np.dot(homo, H)), (WIDTH, HEIGHT))
         
         # write to file
         cv2.imwrite(os.path.join(args.output_dir, imgname[i]), cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  
