@@ -6,6 +6,10 @@ Course project for 3DV 2021 Spring @ ETH Zurich
 ```
 python src/utils/v2img.py --pathIn=data/0125-0135/CAM1/CAM1.mp4 --pathOut=data/0125-0135/CAM1/img --splitnum=1
 ```
+- Estimate football pitch homography (size 120m * 90m [ref:](https://www.quora.com/What-are-the-official-dimensions-of-a-soccer-field-in-the-FIFA-World-Cup))
+```
+python src/utils/computeHomo.py --img 'data/0125-0135/RIGHT/img/image0000.jpg' --out_dir 'data/0125-0135/RIGHT/'
+```
 - Handle moving cameras
 ```
 python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/CAM1/calib.txt --img_dir=data/0125-0135/CAM1/img --output_dir=data/0125-0135/CAM1/img_static
