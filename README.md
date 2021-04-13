@@ -13,6 +13,17 @@ python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/C
 
 - After processing, data folder structure:
 ```
+data
+├── 0125-0135
+│   ├── CAM1
+│   │   ├── img
+│   │   └── img_static
+│   └── RIGHT
+│       └── img
+└── calibration_results
+    └── 0125-0135
+        ├── CAM1
+        └── RIGHT
 ```
 
 ## Generate tracklet
