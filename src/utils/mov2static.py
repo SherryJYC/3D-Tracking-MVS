@@ -20,7 +20,7 @@ import skimage.io
 import cv2
 
 def config():
-    a = argparse.ArgumentParser(description='Simple script for testing a CTracker network.')
+    a = argparse.ArgumentParser(description='handle moving cam')
     a.add_argument('--calib_file', default='data/calibration_results/0125-0135/CAM1/calib.txt', type=str, help='path to calibration file')
     a.add_argument('--img_dir', default='data/0125-0135/CAM1/img', help='Path to original image folder')
     a.add_argument('--output_dir', default='data/0125-0135/CAM1/img_static', help='Output path to projected image folder')
