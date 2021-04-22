@@ -58,6 +58,9 @@ data
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/16m_right_prediction.txt 
 # if format <x1, y1, x2, y2>
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/iou/16m_right.txt --xymode
+# if 3d mode
+python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/RIGHT.txt --calib_file=data/calibration_results/0125-0135/RIGHT/calib.txt  --pitchmode
+
 ```
 - Produce quantitative result
 
