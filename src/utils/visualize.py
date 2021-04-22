@@ -58,6 +58,11 @@ def config():
 def draw_caption(image, box, caption, color):
 	b = np.array(box).astype(int)
 	cv2.putText(image, caption, (b[0], b[1] - 8), cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
+    
+def draw_3d(proj, x, y):
+    cp = np.dot(proj, np.array([x, y, 1]))
+    cp = cp / cp[-1]
+    return cp
 
 def main(args):   
     # load img list
@@ -166,14 +171,21 @@ def main(args):
                 draw_trace_id = str(trace_id)
                 
                 # compute center point (x as horizontal axis)
-                cxp, cyp = int((x1+x2)/2), y1
-                
-                # TODO: Put soccer pitch
-                cp = np.dot(proj, np.array([cxp, cyp, 1]))
-                cp = cp / cp[-1]
-                cv2.circle(img, (int(cp[0]), int(cp[1])), radius=20, color=color_list[trace_id % len(color_list)], thickness=-1)
+                cxp, cyp = int((x1+x2)/2), y2
+#                
+#                # TODO: Put soccer pitch
+                cp = draw_3d(proj, cxp, cyp)
+                cv2.circle(img, (int(cp[0]), int(cp[1])), radius=10, color=color_list[trace_id % len(color_list)], thickness=-1)
+#                cp1 = draw_3d(proj, x1, y1)
+#                cp2 = draw_3d(proj, x1, y2)
+#                cp3 = draw_3d(proj, x2, y1)
+#                cp4 = draw_3d(proj, x2, y2)
+#                cv2.circle(img, (int(cp1[0]), int(cp1[1])), radius=2, color=color_list[trace_id % len(color_list)], thickness=-1)
+#                cv2.circle(img, (int(cp2[0]), int(cp2[1])), radius=2, color=color_list[trace_id % len(color_list)], thickness=-1)
+#                cv2.circle(img, (int(cp3[0]), int(cp3[1])), radius=2, color=color_list[trace_id % len(color_list)], thickness=-1)
+#                cv2.circle(img, (int(cp4[0]), int(cp4[1])), radius=2, color=color_list[trace_id % len(color_list)], thickness=-1)
 
-            cv2.imwrite(os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], 'img', 'img_'+str(i)+'.jpg'), cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  
+            cv2.imwrite(os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], 'img_RIGHT', 'img_'+str(i)+'.jpg'), cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  
 #            videoWriter.write(img)
         cv2.waitKey(0)
     
