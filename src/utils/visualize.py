@@ -48,6 +48,8 @@ def config():
     
     # default is 2d, switch to 3d mode (project bbox to pitch)
     a.add_argument('--pitchmode', action='store_true', help='whether to use 3d mode')
+    a.add_argument('--pitch', default='data/soccer_pitch/soccer_pitch_grass.jpg', type=str, help='path to soccer pitch image')
+    a.add_argument('--pitchhomoroot', default='data/soccer_pitch/homography', type=str, help='path to soccer pitch image')
     a.add_argument('--calib_file', default='data/calibration_results/0125-0135/CAM1/calib.txt', type=str, help='path to calibration file')
     a.add_argument('--n', default=0, help='n-th frame as reference', type=int)
     
@@ -106,6 +108,7 @@ def main(args):
     #######
     #  3D #
     #######
+    setname = args.calib_file.split('/')[-2]
     if args.pitchmode:
         # load calib and image file list
         calib = np.genfromtxt(args.calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
@@ -134,15 +137,20 @@ def main(args):
         T[0,-1], T[1,-1] = woffset, hoffset
         
         # project each image to nth frame 
+        if setname == 'CAM1':
+            args.n = -1
         P1 = computeP(calib[args.n], cx, cy)
         
-        # create a background image
-#        img = cv2.imread(img_list[0])
+        # read homo for soccer pitch
+        homo_pitch = np.load(os.path.join(args.pitchhomoroot, setname+'.npy'))
         
         for i in range(img_len):
             print('processing image (3d mode): '+imgnames[i])
-#            img = np.zeros((img.shape), np.uint8)
-            img = skimage.io.imread(img_list[i])
+            # create a background image
+            img = cv2.imread(args.pitch)
+#            img = cv2.warpPerspective(img, T, (WIDTH, HEIGHT))
+            
+#            img = skimage.io.imread(img_list[i])
             frameidx = int(os.path.basename(img_list[i]).split('.')[0][5:]) - minframeid
             track_cur = track[frameidxcol==frameidx]
             
@@ -157,10 +165,10 @@ def main(args):
             P = computeP(calibline, cx, cy)      
             # compute homography
             H = np.dot(P1, np.linalg.pinv(P))       
-            proj = np.dot(T, np.dot(homo, H))
-            
+            proj = np.dot(homo_pitch, H)
+
             # project to 1st frame (frame0.jpg) x1 = Hx
-            img = cv2.warpPerspective(img, proj, (WIDTH, HEIGHT))
+#            img = cv2.warpPerspective(img, proj, (WIDTH, HEIGHT))
             
             for line in track_cur:
                 if args.xymode:
@@ -172,8 +180,6 @@ def main(args):
                 
                 # compute center point (x as horizontal axis)
                 cxp, cyp = int((x1+x2)/2), y2
-#                
-#                # TODO: Put soccer pitch
                 cp = draw_3d(proj, cxp, cyp)
                 cv2.circle(img, (int(cp[0]), int(cp[1])), radius=10, color=color_list[trace_id % len(color_list)], thickness=-1)
 #                cp1 = draw_3d(proj, x1, y1)
@@ -184,8 +190,8 @@ def main(args):
 #                cv2.circle(img, (int(cp2[0]), int(cp2[1])), radius=2, color=color_list[trace_id % len(color_list)], thickness=-1)
 #                cv2.circle(img, (int(cp3[0]), int(cp3[1])), radius=2, color=color_list[trace_id % len(color_list)], thickness=-1)
 #                cv2.circle(img, (int(cp4[0]), int(cp4[1])), radius=2, color=color_list[trace_id % len(color_list)], thickness=-1)
-
-            cv2.imwrite(os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], 'img_RIGHT', 'img_'+str(i)+'.jpg'), cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  
+            print('save to '+os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], 'img_'+setname, 'img_'+str(i)+'.jpg'))
+            cv2.imwrite(os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], 'img_'+setname, 'img_'+str(i)+'.jpg'), cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  
 #            videoWriter.write(img)
         cv2.waitKey(0)
     
