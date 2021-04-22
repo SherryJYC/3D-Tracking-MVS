@@ -10,6 +10,7 @@ python src/utils/v2img.py --pathIn=data/0125-0135/CAM1/CAM1.mp4 --pathOut=data/0
 ```
 python src/utils/computeHomo.py --img=data/0125-0135/RIGHT/img/image0000.jpg --out_dir=data/0125-0135/RIGHT/
 ```
+[FIFA official document](https://img.fifa.com/image/upload/datdz0pms85gbnqy4j3k.pdf)
 - Handle moving cameras
 ```
 python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/CAM1/calib.txt --img_dir=data/0125-0135/CAM1/img --output_dir=data/0125-0135/CAM1/img_static
