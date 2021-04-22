@@ -45,10 +45,13 @@ def json2text(args):
                 if instance['id'] not in playerid:
                     playerid.append(instance['id'])
                 instance['bbox'] = np.array(instance['bbox']).astype(float)
-                xy1 = np.dot(T, np.array([instance['bbox'][0], instance['bbox'][1], 1]))
-                xy2 = np.dot(T, np.array([instance['bbox'][2], instance['bbox'][3], 1]))
+#                xy1 = np.dot(T, np.array([instance['bbox'][0], instance['bbox'][1], 1]))
+#                xy2 = np.dot(T, np.array([instance['bbox'][2], instance['bbox'][3], 1]))
+                xy1 = np.array([instance['bbox'][0], instance['bbox'][1], 1])
+                xy2 = np.array([instance['bbox'][2], instance['bbox'][3], 1])
                 
-                rows.append([frameid+1, playerid.index(instance['id']), xy1[0], xy1[1], xy2[0], xy2[1], instance['confidence'], instance['class']])
+#                rows.append([frameid+1, playerid.index(instance['id']), xy1[0], xy1[1], xy2[0], xy2[1], instance['confidence'], instance['class']])
+                rows.append([frameid+1, playerid.index(instance['id']), xy1[0], xy1[1], xy2[0], xy2[1], 1, -1, -1, -1])
         
         np.savetxt(os.path.join(prefix, cam['camera_id']+'.txt'), np.array(rows).astype('float'), delimiter=',')
         np.savetxt(os.path.join(prefix, 'id_mapping'+'.txt'), np.array(playerid).astype(str), delimiter=',', fmt='%s')

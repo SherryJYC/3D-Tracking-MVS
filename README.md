@@ -1,7 +1,7 @@
 # 3D-Tracking-MVS
 Course project for 3DV 2021 Spring @ ETH Zurich
 
-## Preprocessing
+## Preprocessing 
 - Split video into image frames
 ```
 python src/utils/v2img.py --pathIn=data/0125-0135/CAM1/CAM1.mp4 --pathOut=data/0125-0135/CAM1/img --splitnum=1
@@ -48,6 +48,22 @@ data
 
 ## Cross-camera link
 
+## Evaludation
+
+- Visualize results
+
+```
+# if format <x, y, w, h>
+python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/16m_right_prediction.txt 
+# if format <x1, y1, x2, y2>
+python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/iou/16m_right.txt --xymode
+```
+- Produce quantitative result
+
+```
+python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor
+
+```
 
 ## Useful literature
 
