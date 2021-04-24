@@ -32,7 +32,7 @@ visualize tracking results and save to video
 
 '''
 def config():
-    a = argparse.ArgumentParser(description='Simple script for testing a CTracker network.')
+    a = argparse.ArgumentParser(description='Simple script for visualize')
     # path control
     a.add_argument('--result_file', default='output/ctracker/train_cam034_synset/results/cam4_csv/mulcam/set06.txt', type=str, help='path to tracking result file')    
     # img mode
