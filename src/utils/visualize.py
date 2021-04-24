@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 import skimage.io
 
-from mov2static import computeP
+from mov2static import computeP, Rx, Ry
 
 # gobal param
 FPS = 30
@@ -52,6 +52,8 @@ def config():
     a.add_argument('--pitchhomoroot', default='data/soccer_pitch/homography', type=str, help='path to soccer pitch image')
     a.add_argument('--calib_file', default='data/calibration_results/0125-0135/CAM1/calib.txt', type=str, help='path to calibration file')
     a.add_argument('--n', default=0, help='n-th frame as reference', type=int)
+    a.add_argument('--vis_calib_file', default=None, type=str, help='path to the calibration file of the camera to be visualized')
+    a.add_argument('--vis_result_file', default=None, type=str, help='path to the tracking result file of the camera to be visualized')
     
     args = a.parse_args()
     
@@ -65,6 +67,40 @@ def draw_3d(proj, x, y):
     cp = np.dot(proj, np.array([x, y, 1]))
     cp = cp / cp[-1]
     return cp
+
+def compose_matrix(line, cx, cy):
+    theta, phi, f, Cx, Cy, Cz = line
+    R = Rx(phi).dot(Ry(theta).dot(np.array([[1,0,0],[0,-1,0],[0,0,-1]])))
+    T = -R.dot(np.array([[Cx], [Cy], [Cz]]))
+    K = np.eye(3, 3)
+    K[0, 0], K[1, 1], K[0, 2], K[1, 2] = f, f, cx, cy
+
+    return K, R, T
+
+def compute_homo(calib1, calib2, cx, cy):
+    # theta1, phi1, f1, Cx1, Cy1, Cz1 = calib1
+    # R1 = Rx(phi1).dot(Ry(theta1).dot(np.array([[1,0,0],[0,-1,0],[0,0,-1]])))
+    # T1 = np.array([[Cx1], [Cy1], [Cz1]])
+    # K1 = np.eye(3, 3)
+    # K1[0, 0], K1[1, 1], K1[0, 2], K1[1, 2] = f1, f1, cx1, cy1
+
+    # theta2, phi2, f2, Cx2, Cy2, Cz2 = calib2
+    # R2 = Rx(phi2).dot(Ry(theta2).dot(np.array([[1,0,0],[0,-1,0],[0,0,-1]])))
+    # T2 = np.array([[Cx2], [Cy2], [Cz2]])
+    # K2 = np.eye(3, 3)
+    # K2[0, 0], K2[1, 1], K2[0, 2], K2[1, 2] = f2, f2, cx2, cy2
+
+    # Trans = T2-T1
+
+    K1, R1, T1 = compose_matrix(calib1, cx, cy)
+    K2, R2, T2 = compose_matrix(calib2, cx, cy)
+
+
+    H = K2.dot(np.hstack((R2,T2))).dot(np.linalg.pinv(np.hstack((R1,T1)))).dot(np.linalg.inv(K1))
+
+    return H
+
+
 
 def main(args):   
     # load img list
@@ -93,15 +129,34 @@ def main(args):
     H, W, _ = skimage.io.imread(img_list[0]).shape
     
     # load tracking result file
-    track = np.genfromtxt(args.result_file,delimiter=',',usecols=(1, 2,3,4,5)).astype(int)
+    track = np.genfromtxt(args.result_file,delimiter=',',usecols=(1,2,3,4,5)).astype(int)
 #    track = np.genfromtxt(args.result_file,delimiter=',',usecols=(1, 2,3,4,5, 7)).astype(int)
     frameidxcol = np.genfromtxt(args.result_file,delimiter=',',usecols=(0)).astype(int)
+
+    # if want to visualize the tracking results of the other camera, also read the results
+    if (args.vis_calib_file is not None) and (args.vis_result_file is not None):
+        vis_track = np.genfromtxt(args.vis_result_file,delimiter=',',usecols=(1,2,3,4,5)).astype(int)
+        vis_frameidxcol = np.genfromtxt(args.vis_result_file,delimiter=',',usecols=(0)).astype(int)
+        # load calib and image file list
+        vis_calib = np.genfromtxt(args.vis_calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
+        vis_imgname = np.genfromtxt(args.vis_calib_file,delimiter=',',usecols=(7), dtype=str)
+        vis_framecalib = [int(x.split('.')[0][5:]) for x in vis_imgname]
+        # load calib and image file list for the reference camera
+        calib = np.genfromtxt(args.calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
+        imgname = np.genfromtxt(args.calib_file,delimiter=',',usecols=(7), dtype=str)
+        framecalib = [int(x.split('.')[0][5:]) for x in imgname]
+    
+    # print(vis_framecalib)
+
     
     # prepare video
     if args.pitchmode:
         output_file = os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], os.path.basename(args.result_file.split('.')[0]+'_3d.mp4'))
+    elif args.vis_result_file is not None:
+        output_file = os.path.join(os.path.dirname(args.vis_result_file), os.path.basename(args.vis_result_file).split('.')[0]+'_to_'+os.path.basename(args.result_file).split('.')[0]+'.mp4')
     else:
         output_file = os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], os.path.basename(args.result_file.split('.')[0]+'.mp4'))
+    
     videoWriter = cv2.VideoWriter(output_file, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), FPS, (W, H))
     print('save video to '+output_file)
     
@@ -215,6 +270,44 @@ def main(args):
                 draw_trace_id = str(trace_id)
                 draw_caption(img, (x1, y1, x2, y2), draw_trace_id, color=color_list[trace_id % len(color_list)])
                 cv2.rectangle(img, (x1, y1), (x2, y2), color=color_list[trace_id % len(color_list)], thickness=2)
+            
+            # visualize the tracking results of the other camera
+            if (args.vis_calib_file is not None) and (args.vis_result_file is not None):
+                # get the tracking result of the current frame
+                vis_track_cur = vis_track[vis_frameidxcol==frameidx]
+                print(frameidx)
+                print(vis_track_cur)
+                break
+                # get the calibration of the two cameras for current frame
+                # find index in calib file
+                if (not frameidx in framecalib) or (not frameidx in vis_framecalib):
+                    continue
+                else:
+                    # project to soccer pitch
+                    calibline = calib[framecalib.index(frameidx)]
+                    vis_calibline = vis_calib[vis_framecalib.index(frameidx)]
+                    WIDTH, HEIGHT = img.shape[0], img.shape[1]
+                    cx,cy = WIDTH/2., HEIGHT/2.
+
+                    # project to soccer pitch
+                    P_ref = computeP(calibline, cx, cy)
+                    P_vis = computeP(vis_calibline, cx, cy)
+                    # compute homography
+                    warp_matrix = np.dot(P_ref, np.linalg.pinv(P_vis))
+                    # warp_matrix = compute_homo(vis_calibline,calibline,cx,cy)
+                    # print(warp_matrix)
+
+                    for line in vis_track_cur:
+                        if args.xymode:
+                            x1, y1, x2, y2 = line[1], line[2], line[3], line[4]
+                        else:
+                            x1, y1, x2, y2 = line[1], line[2], line[1]+line[3], line[2]+line[4]
+                        vis_trace_id = line[0]
+                        # compute center point (x as horizontal axis)
+                        cxp, cyp = int((x1+x2)/2), int((y1+y2)/2)
+                        cp = draw_3d(warp_matrix, cxp, cyp)
+                        cv2.putText(img, str(vis_trace_id), (int(cp[0]), int(cp[1]) - 8), cv2.FONT_HERSHEY_PLAIN, 2, color_list[vis_trace_id % len(color_list)], 2)
+                        cv2.circle(img, (int(cp[0]), int(cp[1])), radius=5, color=color_list[vis_trace_id % len(color_list)], thickness=-1)
             videoWriter.write(img)
         cv2.waitKey(0)
 
