@@ -64,7 +64,7 @@ def draw_caption(image, box, caption, color):
 	cv2.putText(image, caption, (b[0], b[1] - 8), cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
     
 def draw_3d(proj, x, y):
-    cp = np.dot(proj, np.array([x, y, 1]))
+    cp = np.dot(proj, np.array([x, y, 1]).reshape(3,1))
     cp = cp / cp[-1]
     return cp
 
@@ -77,29 +77,120 @@ def compose_matrix(line, cx, cy):
 
     return K, R, T
 
+def homogenize(x):
+    return np.vstack((x,1))
+
 def compute_homo(calib1, calib2, cx, cy):
-    # theta1, phi1, f1, Cx1, Cy1, Cz1 = calib1
-    # R1 = Rx(phi1).dot(Ry(theta1).dot(np.array([[1,0,0],[0,-1,0],[0,0,-1]])))
-    # T1 = np.array([[Cx1], [Cy1], [Cz1]])
-    # K1 = np.eye(3, 3)
-    # K1[0, 0], K1[1, 1], K1[0, 2], K1[1, 2] = f1, f1, cx1, cy1
 
-    # theta2, phi2, f2, Cx2, Cy2, Cz2 = calib2
-    # R2 = Rx(phi2).dot(Ry(theta2).dot(np.array([[1,0,0],[0,-1,0],[0,0,-1]])))
-    # T2 = np.array([[Cx2], [Cy2], [Cz2]])
-    # K2 = np.eye(3, 3)
-    # K2[0, 0], K2[1, 1], K2[0, 2], K2[1, 2] = f2, f2, cx2, cy2
-
-    # Trans = T2-T1
+    # print(Trans)
+    # print(K2)
 
     K1, R1, T1 = compose_matrix(calib1, cx, cy)
     K2, R2, T2 = compose_matrix(calib2, cx, cy)
 
+    # mc1toc2 = np.dot(np.vstack((np.hstack((R2,T2)),np.array([0,0,0,1]))),np.vstack((np.hstack((R1.T,np.dot(-R1.T,T1))),np.array([0,0,0,1]))))
+    # mc1toc2 = mc1toc2[:3,:]
+    # H = K2.dot(mc1toc2.dot(np.linalg.inv(K1)))
 
     H = K2.dot(np.hstack((R2,T2))).dot(np.linalg.pinv(np.hstack((R1,T1)))).dot(np.linalg.inv(K1))
 
     return H
 
+def homo_from_pose(calib1, calib2, cx, cy):
+
+    K1, R1, t1 = compose_matrix(calib1, cx, cy)
+    K2, R2, t2 = compose_matrix(calib2, cx, cy)
+
+    R_1to2 = R2.dot(R1.T)
+    t_1to2 = R2.dot(-(R1.T).dot(t1)) + t2
+
+    normal = np.zeros((3,1))
+    normal[1] = 1
+    normal1 = R1.dot(normal)
+
+    origin = np.zeros((3,1))
+    origin1 = R1.dot(origin) + t1
+    d_inv1 = 1/np.inner(normal1.ravel(),origin1.ravel())
+    print(t_1to2)
+    print(1/d_inv1)
+
+    homo_eu = R_1to2 + d_inv1*t_1to2.dot(normal1.T)
+
+    homo = K2.dot(homo_eu.dot(np.linalg.inv(K1)))
+
+    homo /= homo[2,2]
+
+    return homo
+
+def skew(e):
+    return np.array([[0,e[2],-e[1]],[-e[2],0,e[0]],[e[1],-e[0],0]])
+
+def enforce_F(F):
+    U,S,V = np.linalg.svd(F)
+    S = np.diag(S)
+    S[2,2]=0
+    return U.dot(S.dot(V))
+
+def fundamental_from_pose(calib1, calib2, cx, cy):
+    # theta1, phi1, f1, Cx1, Cy1, Cz1 = calib1
+    # R1 = Rx(phi1).dot(Ry(theta1).dot(np.array([[1,0,0],[0,-1,0],[0,0,-1]])))
+    # T1 = np.array([[Cx1], [Cy1], [Cz1]])
+    # K1 = np.eye(3, 3)
+    # K1[0, 0], K1[1, 1], K1[0, 2], K1[1, 2] = f1, f1, cx, cy
+
+    # theta2, phi2, f2, Cx2, Cy2, Cz2 = calib2
+    # R2 = Rx(phi2).dot(Ry(theta2).dot(np.array([[1,0,0],[0,-1,0],[0,0,-1]])))
+    # T2 = np.array([[Cx2], [Cy2], [Cz2]])
+    # K2 = np.eye(3, 3)
+    # K2[0, 0], K2[1, 1], K2[0, 2], K2[1, 2] = f2, f2, cx, cy
+    # P2 = np.dot(K, np.hstack((R2, -R2.dot(T2))))
+    P1 = computeP(calib1, cx, cy)
+    P2 = computeP(calib2, cx, cy)
+    T2 = np.array(calib2[3:]).reshape((3,1))
+
+    e = P1.dot(homogenize(T2)).ravel()
+    # e /= e[2]
+
+    F = skew(e).dot(P1.dot(np.linalg.pinv(P2)))
+
+    return enforce_F(F)
+
+def draw_line(img, line, text, color):
+    _, c, _ = img.shape
+    
+    x0, y0 = map(int, [0, -line[2]/line[1]])
+    x1, y1 = map(int, [c, -(line[2]+line[0]*c)/line[1]])
+    cv2.line(img, (x0, y0), (x1, y1), color, 1)
+    # add text
+    cv2.putText(img, text, (x0+8, y0), cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
+
+
+def fundamental_from_image():
+    img1 = cv2.imread('/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC CAM1/img/image0001.jpg',0)  #queryimage # left image
+    img2 = cv2.imread('/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m RIGHT/img/image0001.jpg',0) #trainimage # right image
+    sift = cv2.SIFT_create()
+    # find the keypoints and descriptors with SIFT
+    kp1, des1 = sift.detectAndCompute(img1,None)
+    kp2, des2 = sift.detectAndCompute(img2,None)
+    # FLANN parameters
+    FLANN_INDEX_KDTREE = 1
+    index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+    search_params = dict(checks=50)
+    flann = cv2.FlannBasedMatcher(index_params,search_params)
+    matches = flann.knnMatch(des1,des2,k=2)
+    pts1 = []
+    pts2 = []
+    # ratio test as per Lowe's paper
+    for i,(m,n) in enumerate(matches):
+        if m.distance < 0.8*n.distance:
+            pts2.append(kp2[m.trainIdx].pt)
+            pts1.append(kp1[m.queryIdx].pt)
+
+    pts1 = np.int32(pts1)
+    pts2 = np.int32(pts2)
+    F, mask = cv2.findFundamentalMat(pts1,pts2,cv2.FM_LMEDS)
+
+    return F
 
 
 def main(args):   
@@ -153,7 +244,7 @@ def main(args):
     if args.pitchmode:
         output_file = os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], os.path.basename(args.result_file.split('.')[0]+'_3d.mp4'))
     elif args.vis_result_file is not None:
-        output_file = os.path.join(os.path.dirname(args.vis_result_file), os.path.basename(args.vis_result_file).split('.')[0]+'_to_'+os.path.basename(args.result_file).split('.')[0]+'.mp4')
+        output_file = os.path.join(os.path.dirname(args.vis_result_file), os.path.basename(args.vis_result_file).split('.')[0]+'_to_'+os.path.basename(args.result_file).split('.')[0]+'_homo.mp4')
     else:
         output_file = os.path.join(args.result_file[:-len(os.path.basename(args.result_file))], os.path.basename(args.result_file.split('.')[0]+'.mp4'))
     
@@ -254,7 +345,8 @@ def main(args):
     #######
     #  2D #
     #######
-    else:      
+    else:
+        # F = fundamental_from_image()
         for i in range(img_len):
             print('processing image (2d mode): '+imgnames[i])
             img = cv2.imread(img_list[i])
@@ -275,9 +367,9 @@ def main(args):
             if (args.vis_calib_file is not None) and (args.vis_result_file is not None):
                 # get the tracking result of the current frame
                 vis_track_cur = vis_track[vis_frameidxcol==frameidx]
-                print(frameidx)
-                print(vis_track_cur)
-                break
+                # print(frameidx)
+                # print(vis_track_cur)
+                # break
                 # get the calibration of the two cameras for current frame
                 # find index in calib file
                 if (not frameidx in framecalib) or (not frameidx in vis_framecalib):
@@ -290,12 +382,20 @@ def main(args):
                     cx,cy = WIDTH/2., HEIGHT/2.
 
                     # project to soccer pitch
-                    P_ref = computeP(calibline, cx, cy)
-                    P_vis = computeP(vis_calibline, cx, cy)
+                    # P_ref = computeP(calibline, cx, cy)
+                    # P_vis = computeP(vis_calibline, cx, cy)
                     # compute homography
-                    warp_matrix = np.dot(P_ref, np.linalg.pinv(P_vis))
+                    # warp_matrix = np.dot(P_ref, np.linalg.pinv(P_vis))
+                    
                     # warp_matrix = compute_homo(vis_calibline,calibline,cx,cy)
                     # print(warp_matrix)
+                    warp_matrix = homo_from_pose(vis_calibline,calibline,cx,cy)
+
+                    # img2_warp = cv2.warpPerspective(img2, warp_matrix, (HEIGHT, WIDTH))
+
+                    # F = cv2.fundamentalFromProjections(P_ref, P_vis)
+                    # F = fundamental_from_pose(calibline, vis_calibline, cx, cy)
+                    # print(F)
 
                     for line in vis_track_cur:
                         if args.xymode:
@@ -304,8 +404,17 @@ def main(args):
                             x1, y1, x2, y2 = line[1], line[2], line[1]+line[3], line[2]+line[4]
                         vis_trace_id = line[0]
                         # compute center point (x as horizontal axis)
-                        cxp, cyp = int((x1+x2)/2), int((y1+y2)/2)
+                        # cxp, cyp = int((x1+x2)/2), int((y1+y2)/2)
+                        cxp, cyp = int((x1+x2)/2), int(y2)
+                        # lines1 = cv2.computeCorrespondEpilines(pts2.reshape(-1,1,2), 2,F)
                         cp = draw_3d(warp_matrix, cxp, cyp)
+                        # cp = warp_pos(vis_calibline, calibline, cx, cy, cxp, cyp)
+                        # x = np.vstack((cxp, cyp))
+                        # line1 = cv2.computeCorrespondEpilines(x.reshape(-1,1,2), 2,F).reshape(3,1)
+                        # line1 = F.dot(homogenize(x))
+                        # print(line1.shape)
+                        # line1 /= line1[2,0]
+                        # draw_line(img, line1,str(vis_trace_id), color_list[vis_trace_id % len(color_list)])
                         cv2.putText(img, str(vis_trace_id), (int(cp[0]), int(cp[1]) - 8), cv2.FONT_HERSHEY_PLAIN, 2, color_list[vis_trace_id % len(color_list)], 2)
                         cv2.circle(img, (int(cp[0]), int(cp[1])), radius=5, color=color_list[vis_trace_id % len(color_list)], thickness=-1)
             videoWriter.write(img)
