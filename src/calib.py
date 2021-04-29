@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import os
 import math
-import argparse
 
 SCALE = 1
 plane = np.array([0,1,0])
