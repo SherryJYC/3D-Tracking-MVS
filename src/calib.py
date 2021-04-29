@@ -3,8 +3,10 @@ import cv2
 import numpy as np
 import os
 import math
+import argparse
 
-
+SCALE = 1
+plane = np.array([0,1,0])
 theta = np.linspace(0, 2.*np.pi, 50)
 alpha = np.linspace(0.72*np.pi, 1.28*np.pi, 25)
 pitch = [
@@ -112,12 +114,117 @@ def computeP(line, cx, cy):
 
     return P
 
+def cross(e):
+    return np.array([[0,e[2],-e[1]],[-e[2],0,e[0]],[e[1],-e[0],0]])
+
+def skew(w):
+    top = np.hstack([-w[3]*np.diag([1,1,1]), cross(w[:3])])
+    bottom = np.hstack([w[:3],np.zeros(3)])
+
+    return np.vstack([top,bottom])
+
+def point_normal_eq(normal, pt):
+    return np.hstack([normal,-np.inner(normal,pt)]).reshape(-1,1)
+
+def backproject_pitch(P, x, C_cam):
+    X = np.dot(np.linalg.pinv(P),x)
+    X /= X[-1]
+
+    C_homo = np.hstack([C_cam, 1]).reshape(-1,1)
+    p = np.dot(X.T,plane_normal)*C_homo-np.dot(C_homo.T,plane_normal)*X
+
+    p /= p[-1]
+    return p[0],p[2]
+
+def display_soccer_pitch_ground(points,imgname,C_cam):
+    plt.figure(figsize=(16, 9))
+
+    for pts in pitch:
+        pts[[1,2]] = pts[[2,1]]
+        px, py = pts[0],pts[2]
+        plt.plot(SCALE*px, SCALE*py, 'r-')
+    
+    plt.scatter(C_cam[0],-C_cam[2])
+    plt.annotate('Camera',(C_cam[0],-C_cam[2]))
+
+    for p in points:
+        plt.scatter(p[0],-p[1])
+        plt.annotate(p[2],(p[0],-p[1]))
+    
+    # plt.show()
+    plt.savefig(imgname)
+        
+
+
 if __name__ == "__main__":
-    img = cv2.imread("./data/0125-0135/CAM1/img/image0125.png")
-    calib_file = 'data/calibration_results/0125-0135/CAM1/calib.txt'
+
+    img = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC CAM1/img/image0001.jpg")
+    calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
     calib = np.genfromtxt(calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
+    imgname = np.genfromtxt(calib_file,delimiter=',',usecols=(7),dtype=str)
+    framecalib = [int(x.split('.')[0][5:]) for x in imgname]
+    result_file = '/scratch2/wuti/Others/3DVision/cam1_result/cam1.txt'
+    tracks = np.genfromtxt(result_file,delimiter=',',usecols=(0,1,2,3,4,5)).astype(int)
+
+    print(imgname)
+    
     cx,cy = 960, 540
-    P = computeP(calib[125], cx, cy)
+    Projections = [computeP(calibline, cx, cy) for calibline in calib]
+    print(len(Projections),len(calib))
+
+    # lines = tracks[tracks[:,0]==1]
+    # print(lines)
+    # P = computeP(calib[0], cx, cy)
+    C_cam = calib[0,-3:]
+    # print(C_cam)
+
+    plane_normal = point_normal_eq(plane,np.array([C_cam[0],0,C_cam[1]]))
+    # print(plane_normal)
+    # points = []
+    # for line in lines:
+    #     x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
+    #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
+
+    #     points.append([tx, ty, line[1]])
+    # display_soccer_pitch_ground(points, '16m_right.png',C_cam)
+    
+    # save tracking results coordinates on the pitch
+    tracks_pitch = []
+
+    # print(Projections)
+    for track in tracks:
+        x1, y1, x2, y2 = track[2], track[3], track[4], track[5]
+        # get the calibration of the corresponding frames
+        # print(framecalib == track[0])
+        if track[0] not in framecalib:
+            continue
+        P = Projections[framecalib.index(track[0])]
+        C_cam = calib[framecalib.index(track[0]),-3:]
+
+        tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
+        
+        # frame id, track id, x, z
+        tracks_pitch.append([track[0], track[1], tx, ty])
+    
+    np.savetxt('/scratch2/wuti/Others/3DVision/cam1_result/cam1_pitch.txt', np.array(tracks_pitch), delimiter=',')
+
+    # img2 = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC CAM1/img/image0001.jpg")
+    # calib_file2 = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
+    # calib2 = np.genfromtxt(calib_file2,delimiter=',',usecols=(1,2,3,4,5,6))
+    # result_file2 = '/scratch2/wuti/Others/3DVision/cam1_result/cam1.txt'
+    # track2 = np.genfromtxt(result_file2,delimiter=',',usecols=(0,1,2,3,4,5)).astype(int)
+    # lines2 = track2[track2[:,0]==1]
+    # P2 = computeP(calib2[0], cx, cy)
+    # C_cam2 = calib2[0,-3:]
+    # points2 = []
+
+    # for line2 in lines2:
+    #     x1, y1, x2, y2 = line2[2], line2[3], line2[4], line2[5]
+    #     tx, ty = backproject_pitch(P2,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam2)
+
+    #     points2.append([tx, ty, line2[1]])
+
+    # display_soccer_pitch_ground(points2, 'cam1.png', C_cam2)
 
 #    K = np.asarray([[ 5502.18, 0.0,     2048.0],
 #                    [ 0.0,     5502.18, 1152.0],
@@ -128,4 +235,4 @@ if __name__ == "__main__":
 #    t = np.asarray( [[-3.52350603, -2.12259918, 85.24450696]]).T
 #    P = K @ np.concatenate([R, t], axis=1)
     
-    display_soccer_pitch(img, P)
+    # display_soccer_pitch(img, P)

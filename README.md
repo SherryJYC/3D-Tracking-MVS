@@ -19,6 +19,9 @@ python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/C
 ```
 python src/utils/json2txt.py --jsonfile=data/0125-0135/0125-0135.json
 ```
+- Backproject to ground plane
+
+Equation to find the intersection of a line with a plane ([ref](https://math.stackexchange.com/questions/2041296/algorithm-for-line-in-plane-intersection-in-3d))
 - After processing, data folder structure should be like:
 ```
 data
