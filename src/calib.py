@@ -7,6 +7,7 @@ import argparse
 
 SCALE = 1
 plane = np.array([0,1,0])
+origin = np.array([0,0,0])
 theta = np.linspace(0, 2.*np.pi, 50)
 alpha = np.linspace(0.72*np.pi, 1.28*np.pi, 25)
 pitch = [
@@ -158,12 +159,13 @@ def display_soccer_pitch_ground(points,imgname,C_cam):
 
 if __name__ == "__main__":
 
-    img = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC CAM1/img/image0001.jpg")
+    img = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m CAM1/img/image0001.jpg")
     calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
     calib = np.genfromtxt(calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
     imgname = np.genfromtxt(calib_file,delimiter=',',usecols=(7),dtype=str)
     framecalib = [int(x.split('.')[0][5:]) for x in imgname]
-    result_file = '/scratch2/wuti/Others/3DVision/cam1_result/cam1.txt'
+    result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24.txt'
+    xymode = False
     tracks = np.genfromtxt(result_file,delimiter=',',usecols=(0,1,2,3,4,5)).astype(int)
 
     print(imgname)
@@ -178,11 +180,14 @@ if __name__ == "__main__":
     C_cam = calib[0,-3:]
     # print(C_cam)
 
-    plane_normal = point_normal_eq(plane,np.array([C_cam[0],0,C_cam[1]]))
+    plane_normal = point_normal_eq(plane,origin)
     # print(plane_normal)
     # points = []
     # for line in lines:
-    #     x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
+    #     if xymode:
+    #         x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
+    #     else:
+    #         x1, y1, x2, y2 = line[2], line[3], line[2]+line[4], line[3]+line[5]
     #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
 
     #     points.append([tx, ty, line[1]])
@@ -193,7 +198,10 @@ if __name__ == "__main__":
 
     # print(Projections)
     for track in tracks:
-        x1, y1, x2, y2 = track[2], track[3], track[4], track[5]
+        if xymode:
+            x1, y1, x2, y2 = track[2], track[3], track[4], track[5]
+        else:
+            x1, y1, x2, y2 = track[2], track[3], track[2]+track[4], track[3]+track[5]
         # get the calibration of the corresponding frames
         # print(framecalib == track[0])
         if track[0] not in framecalib:
@@ -206,7 +214,7 @@ if __name__ == "__main__":
         # frame id, track id, x, z
         tracks_pitch.append([track[0], track[1], tx, ty])
     
-    np.savetxt('/scratch2/wuti/Others/3DVision/cam1_result/cam1_pitch.txt', np.array(tracks_pitch), delimiter=',')
+    np.savetxt('/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24_pitch.txt', np.array(tracks_pitch), delimiter=',')
 
     # img2 = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC CAM1/img/image0001.jpg")
     # calib_file2 = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
