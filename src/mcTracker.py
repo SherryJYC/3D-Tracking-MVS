@@ -49,6 +49,9 @@ class Target():
     def get_last_pos(self):
         return self.last_pos
 
+    def set_id(self, newid):
+        self.id = newid
+
 class Camera():
     """
     store detection loaded from cam file
@@ -179,6 +182,7 @@ class Pitch():
                 if r >= len(self.target_list) or c >= len(self.temp_target_list):
                     continue
                 valid_col.append(c)
+
                 # update target
                 newpos = self.temp_target_list[c].get_last_pos()
                 self.target_list[r].add_pos(newpos)
@@ -187,6 +191,7 @@ class Pitch():
             for c in range(len(self.temp_target_list)):
                 if c not in valid_col:
                     target = self.temp_target_list[c]
+                    target.set_id(self.free_trackid)
                     self.target_list.append(target)
                     self.free_trackid += 1
 
