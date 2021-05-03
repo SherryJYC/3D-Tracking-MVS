@@ -22,7 +22,7 @@ class Position():
     def __init__(self, x, z, t, cam=None, objid=None):
         self.x = x
         self.z = z
-        self.t = t
+        self.t = int(t)
         self.info = {} # {'cams':, 'ids':}
 
 
@@ -45,6 +45,9 @@ class Target():
         self.pos_num+=1
         self.last_pos = pos
         self.last_frame = pos.t
+
+    def get_last_pos(self):
+        return self.last_pos
 
 class Camera():
     """
@@ -91,13 +94,18 @@ class Pitch():
     """
     store and update 3d targets (tracked)
     """
-    def __init__(self):
+    def __init__(self, output=None):
         self.tstart = 1
         self.tend = -1
         self.cam_list = [] # only accept 2 cams now
         self.target_list = []
         self.trash_score = 5
         self.free_trackid = 1 # min availabel track id
+        self.temp_target_list = []
+
+        self.disappear_allow = 5
+
+        self.output = output
 
     def add_cam(self, cam):
         self.cam_list.append(cam)
@@ -106,28 +114,85 @@ class Pitch():
         if self.tstart > cam.tstart:
             self.tstart = cam.tstart
 
+    def run(self):
+        '''
+        main process
+        '''
+        self.initTarget()
+        self.trackTarget()
+        self.saveResult()
+
     def initTarget(self):
         '''
         use bbox from cameras in 1st frame to init targets
         :return: target list
         '''
         bbox1 = self.cam_list[0].bboxs
-        bbox1 = bbox1[bbox1[:, 0]==1]
+        bbox1 = bbox1[bbox1[:, 0]==self.tstart]
         bbox2 = self.cam_list[1].bboxs
-        bbox2 = bbox2[bbox2[:, 0]==1]
+        bbox2 = bbox2[bbox2[:, 0]==self.tstart]
 
-        self.matchInRegion(region=1, bbox1=bbox1, bbox2=bbox2, tcur=1)
-        self.matchInRegion(region=2, bbox1=bbox1, bbox2=bbox2, tcur=1)
-        self.matchInRegion(region=3, bbox1=bbox1, bbox2=bbox2, tcur=1)
-        self.matchInRegion(region=4, bbox1=bbox1, bbox2=bbox2, tcur=1)
+        self.matchInRegion(region=1, bbox1=bbox1, bbox2=bbox2, tcur=self.tstart)
+        self.matchInRegion(region=2, bbox1=bbox1, bbox2=bbox2, tcur=self.tstart)
+        self.matchInRegion(region=3, bbox1=bbox1, bbox2=bbox2, tcur=self.tstart)
+        self.matchInRegion(region=4, bbox1=bbox1, bbox2=bbox2, tcur=self.tstart)
 
         print('initialize with {} targets'.format(self.free_trackid))
 
     def trackTarget(self):
-        for t in range(self.tstart, self.tend):
-            pass
+        self.tstart, self.tend = int(self.tstart), int(self.tend)
+        for t in range(self.tstart+1, self.tend):
+            # check each camera (tracklet-to-tracklet)
+            bbox1 = self.cam_list[0].bboxs
+            bbox1 = bbox1[bbox1[:, 0]==t]
+            bbox2 = self.cam_list[1].bboxs
+            bbox2 = bbox2[bbox2[:, 0]==t]
 
-    def matchInRegion(self, region, bbox1, bbox2, tcur):
+            # empty temp target list
+            self.temp_target_list = []
+
+            self.matchInRegion(region=1, bbox1=bbox1, bbox2=bbox2, tcur=t, temp=True)
+            self.matchInRegion(region=2, bbox1=bbox1, bbox2=bbox2, tcur=t, temp=True)
+            self.matchInRegion(region=3, bbox1=bbox1, bbox2=bbox2, tcur=t, temp=True)
+            self.matchInRegion(region=4, bbox1=bbox1, bbox2=bbox2, tcur=t, temp=True)
+
+            # compare newly detected tracks to exisint target (tracklet-to-target)
+            # combine temp_target_list to target_list
+            costmat = np.full((len(self.target_list), len(self.temp_target_list)), np.inf)
+            for i, pos in enumerate(self.target_list):
+                x, z, t_pos = pos.last_pos.x, pos.last_pos.z, pos.last_pos.t
+                for j, pos_temp in enumerate(self.temp_target_list):
+                    x_temp, z_temp, t_pos_temp = pos_temp.last_pos.x, pos_temp.last_pos.z, pos_temp.last_pos.t
+                    # inf cost for objects far away temporally
+                    if abs(t_pos - t_pos_temp) > self.disappear_allow:
+                        continue
+                    costmat[i, j] = np.linalg.norm(np.array([x, z] - np.array([x_temp, z_temp])))
+            # add trash bin
+            costmat = np.vstack((costmat, np.ones((len(self.target_list), len(self.temp_target_list))) * self.trash_score))
+            costmat = np.hstack((costmat, np.ones((len(self.target_list)*2, len(self.temp_target_list))) * self.trash_score))
+
+            row_ind, col_ind = linear_sum_assignment(costmat)
+
+            # form targets in matched pair
+            valid_col = []
+            for r, c in zip(row_ind, col_ind):
+                if r >= len(self.target_list) or c >= len(self.temp_target_list):
+                    continue
+                valid_col.append(c)
+                # update target
+                newpos = self.temp_target_list[c].get_last_pos()
+                self.target_list[r].add_pos(newpos)
+
+            # form target in unmatched, but newly detected track (col)
+            for c in range(len(self.temp_target_list)):
+                if c not in valid_col:
+                    target = self.temp_target_list[c]
+                    self.target_list.append(target)
+                    self.free_trackid += 1
+
+        print('tracked {} targets at end frame {}'.format(len(self.target_list), self.tend))
+
+    def matchInRegion(self, region, bbox1, bbox2, tcur, temp=False):
         bbox1_region = bbox1[bbox1[:, -1] == region]
         bbox1_region = bbox1_region[:, 2:4]
         bbox2_region = bbox2[bbox2[:, -1] == region]
@@ -152,10 +217,14 @@ class Pitch():
             valid_row.append(r)
             valid_col.append(c)
             # create target
-            x, z, t = (bbox1_region[r, 0] + bbox2_region[c, 0]) / 2, (bbox1_region[r, 1] + bbox2_region[c, 1]) / 2, 1
+            x, z, t = (bbox1_region[r, 0] + bbox2_region[c, 0]) / 2, (bbox1_region[r, 1] + bbox2_region[c, 1]) / 2, tcur
             target = Target(Position(x, z, t), self.free_trackid)
-            self.target_list.append(target)
-            self.free_trackid += 1
+
+            if temp:
+                self.temp_target_list.append(target)
+            else:
+                self.target_list.append(target)
+                self.free_trackid += 1
 
         # form targets in unmatched pair in cam1
         for r in range(len(bbox1_region)):
@@ -163,8 +232,12 @@ class Pitch():
                 continue
             x, z, t = bbox1_region[r, 0], bbox1_region[r, 1], tcur
             target = Target(Position(x, z, t), self.free_trackid)
-            self.target_list.append(target)
-            self.free_trackid += 1
+
+            if temp:
+                self.temp_target_list.append(target)
+            else:
+                self.target_list.append(target)
+                self.free_trackid += 1
 
         # form targets in unmatched pair in cam2
         for c in range(len(bbox2_region)):
@@ -172,5 +245,28 @@ class Pitch():
                 continue
             x, z, t = bbox2_region[c, 0], bbox2_region[c, 1], tcur
             target = Target(Position(x, z, t), self.free_trackid)
-            self.target_list.append(target)
-            self.free_trackid += 1
+
+            if temp:
+                self.temp_target_list.append(target)
+            else:
+                self.target_list.append(target)
+                self.free_trackid += 1
+
+    def saveResult(self):
+        '''
+        save track to result
+        '''
+        if self.output is None:
+            return
+
+        result = []
+        for target in self.target_list:
+            for pos in target.pos_list:
+                result.append([pos.t, target.id, pos.x, pos.z])
+        result = np.array(result)
+
+        # sort by frameid
+        result = result[result[:, 0].argsort()]
+
+        np.savetxt(self.output, result, delimiter=',')
+        print('save to '+self.output)
