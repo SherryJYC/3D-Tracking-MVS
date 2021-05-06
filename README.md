@@ -46,11 +46,12 @@ data
 > only include homography and config files, large image folder not included
 
 
-## Generate tracklet
-
-## Link short tracklets
-
 ## Cross-camera link
+
+- Run multi-cam tracker
+```
+python src/runMCTRacker.py 
+```
 
 ## Evaludation
 

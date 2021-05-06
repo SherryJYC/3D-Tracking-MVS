@@ -36,21 +36,48 @@ class Target():
         self.last_frame = pos.t
         self.pos_num = 1
         self.pos_list = [pos]
+        self.v = [0, 0]
 
     def add_pos(self, pos):
         '''
         add newly tracked bbox
+        and update velocity 
         '''
         self.pos_list.append(pos)
         self.pos_num+=1
         self.last_pos = pos
         self.last_frame = pos.t
+        self.update_vel()
 
-    def get_last_pos(self):
-        return self.last_pos
+    def get_last_pos(self, cur_frame):
+        if self.v[0] == 0 and self.v[1] == 0:
+            return self.last_pos
+        else:
+            x = (cur_frame - self.last_pos.t)*self.v[0]
+            z = (cur_frame - self.last_pos.t)*self.v[1]
+            return Position(x, z, self.last_pos.t)
 
     def set_id(self, newid):
         self.id = newid
+    
+    def update_vel(self):
+        
+        if(self.pos_num < 2):
+            return        
+        elif(self.pos_num < 6):
+            vx = (self.pos_list[self.pos_num-1].x - self.pos_list[self.pos_num-2].x) / (self.pos_list[self.pos_num-1].t - self.pos_list[self.pos_num-2].t)
+            vy = (self.pos_list[self.pos_num-1].z - self.pos_list[self.pos_num-2].z) / (self.pos_list[self.pos_num-1].t - self.pos_list[self.pos_num-2].t)
+            self.v = [vx, vy]
+        else:
+            vx1 = (self.pos_list[self.pos_num-1].x - self.pos_list[self.pos_num-4].x) / (self.pos_list[self.pos_num-1].t - self.pos_list[self.pos_num-4].t)
+            vy1 = (self.pos_list[self.pos_num-1].z - self.pos_list[self.pos_num-4].z) / (self.pos_list[self.pos_num-1].t - self.pos_list[self.pos_num-4].t)
+            vx2 = (self.pos_list[self.pos_num-2].x - self.pos_list[self.pos_num-5].x) / (self.pos_list[self.pos_num-2].t - self.pos_list[self.pos_num-5].t)
+            vy2 = (self.pos_list[self.pos_num-2].z - self.pos_list[self.pos_num-5].z) / (self.pos_list[self.pos_num-2].t - self.pos_list[self.pos_num-5].t)
+            vx3 = (self.pos_list[self.pos_num-3].x - self.pos_list[self.pos_num-6].x) / (self.pos_list[self.pos_num-3].t - self.pos_list[self.pos_num-6].t)
+            vy3 = (self.pos_list[self.pos_num-3].z - self.pos_list[self.pos_num-6].z) / (self.pos_list[self.pos_num-3].t - self.pos_list[self.pos_num-6].t)
+            vx, vy = (vx1+vx2+vx3)/3, (vy1+vy2+vy3)/3
+            self.v = [vx, vy]
+        
 
 class Camera():
     """
@@ -109,6 +136,14 @@ class Pitch():
         self.disappear_allow = 5
 
         self.output = output
+        
+    def __call__(self):
+        '''
+        main process
+        '''
+        self.initTarget()
+        self.trackTarget()
+        self.saveResult()
 
     def add_cam(self, cam):
         self.cam_list.append(cam)
@@ -116,14 +151,6 @@ class Pitch():
             self.tend = cam.tend
         if self.tstart > cam.tstart:
             self.tstart = cam.tstart
-
-    def run(self):
-        '''
-        main process
-        '''
-        self.initTarget()
-        self.trackTarget()
-        self.saveResult()
 
     def initTarget(self):
         '''
@@ -184,8 +211,10 @@ class Pitch():
                 valid_col.append(c)
 
                 # update target
-                newpos = self.temp_target_list[c].get_last_pos()
+                newpos = self.temp_target_list[c].get_last_pos(t)
                 self.target_list[r].add_pos(newpos)
+                # also update velocity for target
+                
 
             # form target in unmatched, but newly detected track (col)
             for c in range(len(self.temp_target_list)):
