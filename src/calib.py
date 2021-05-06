@@ -5,6 +5,12 @@ import os
 import math
 
 SCALE = 1
+RESOLUTION = 0.1
+WIDTH, HEIGHT = 55*2, 36*2
+FPS = 15
+color_list = [(0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (0, 255, 255), (255, 255, 0), (128, 0, 255), 
+(0, 128, 255), (128, 255, 0), (0, 255, 128), (255, 128, 0), (255, 0, 128), (128, 128, 255), (128, 255, 128), (255, 128, 128), (128, 128, 0), (128, 0, 128)]
+
 plane = np.array([0,1,0])
 origin = np.array([0,0,0])
 theta = np.linspace(0, 2.*np.pi, 50)
@@ -153,67 +159,106 @@ def display_soccer_pitch_ground(points,imgname,C_cam):
     
     # plt.show()
     plt.savefig(imgname)
+
+def visualize_tracks_on_pitch(tracks):
+    W, H = int(WIDTH // RESOLUTION), int(HEIGHT // RESOLUTION)
+    cx, cz = WIDTH/2, HEIGHT/2
+
+    img = np.zeros((H, W, 3), np.uint8)
+    img[:,:,:] = [7,124,52]
+    print(img)
+    pitch_lines = [(np.vstack([pts[0]+cx, pts[1]+cz])//RESOLUTION).T.reshape((-1,1,2)).astype(np.int32) for pts in pitch]
+    cv2.polylines(img, pitch_lines, False, (255,255,255), 3)
+
+
+    prev_frame = tracks[0,0]
+
+    for track in tracks:
+        frame_id, track_id, x, z = track
+        # print(frame_id)
+        if frame_id != prev_frame:
+            print('write frame %d' %frame_id)
+            videoWriter.write(img)
+            img = np.zeros((H, W, 3), np.uint8)
+            img[:,:,:] = [7,124,52]
+            # plot pitch
+            cv2.polylines(img, pitch_lines, False, (255,255,255), 3)
+        # draw individual points with id
+        cv2.putText(img, str(int(track_id)), (int((x + cx)//RESOLUTION), int((z + cz)//RESOLUTION) - 8), cv2.FONT_HERSHEY_PLAIN, 2, color_list[int(track_id) % len(color_list)], 2)
+        cv2.circle(img, (int((x + cx)//RESOLUTION), int((z + cz)//RESOLUTION)), radius=5, color=color_list[int(track_id) % len(color_list)], thickness=-1)
+        prev_frame = frame_id
+        
         
 
 
 if __name__ == "__main__":
 
-    img = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m CAM1/img/image0001.jpg")
-    calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
-    calib = np.genfromtxt(calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
-    imgname = np.genfromtxt(calib_file,delimiter=',',usecols=(7),dtype=str)
-    framecalib = [int(x.split('.')[0][5:]) for x in imgname]
-    result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24.txt'
-    xymode = False
-    tracks = np.genfromtxt(result_file,delimiter=',',usecols=(0,1,2,3,4,5)).astype(int)
+    # img = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m CAM1/img/image0001.jpg")
+    # calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
+    # calib = np.genfromtxt(calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
+    # imgname = np.genfromtxt(calib_file,delimiter=',',usecols=(7),dtype=str)
+    # framecalib = [int(x.split('.')[0][5:]) for x in imgname]
+    # result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24.txt'
+    # xymode = False
+    # tracks = np.genfromtxt(result_file,delimiter=',',usecols=(0,1,2,3,4,5)).astype(int)
 
-    print(imgname)
+
+    # print(imgname)
     
-    cx,cy = 960, 540
-    Projections = [computeP(calibline, cx, cy) for calibline in calib]
-    print(len(Projections),len(calib))
+    # cx,cy = 960, 540
+    # Projections = [computeP(calibline, cx, cy) for calibline in calib]
+    # print(len(Projections),len(calib))
 
-    # lines = tracks[tracks[:,0]==1]
-    # print(lines)
-    # P = computeP(calib[0], cx, cy)
-    C_cam = calib[0,-3:]
-    # print(C_cam)
+    # # lines = tracks[tracks[:,0]==1]
+    # # print(lines)
+    # # P = computeP(calib[0], cx, cy)
+    # C_cam = calib[0,-3:]
+    # # print(C_cam)
 
-    plane_normal = point_normal_eq(plane,origin)
-    # print(plane_normal)
-    # points = []
-    # for line in lines:
+    # plane_normal = point_normal_eq(plane,origin)
+    # # print(plane_normal)
+    # # points = []
+    # # for line in lines:
+    # #     if xymode:
+    # #         x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
+    # #     else:
+    # #         x1, y1, x2, y2 = line[2], line[3], line[2]+line[4], line[3]+line[5]
+    # #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
+
+    # #     points.append([tx, ty, line[1]])
+    # # display_soccer_pitch_ground(points, '16m_right.png',C_cam)
+    
+    # # save tracking results coordinates on the pitch
+    # tracks_pitch = []
+
+    # # print(Projections)
+    # for track in tracks:
     #     if xymode:
-    #         x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
+    #         x1, y1, x2, y2 = track[2], track[3], track[4], track[5]
     #     else:
-    #         x1, y1, x2, y2 = line[2], line[3], line[2]+line[4], line[3]+line[5]
+    #         x1, y1, x2, y2 = track[2], track[3], track[2]+track[4], track[3]+track[5]
+    #     # get the calibration of the corresponding frames
+    #     # print(framecalib == track[0])
+    #     if track[0] not in framecalib:
+    #         continue
+    #     P = Projections[framecalib.index(track[0])]
+    #     C_cam = calib[framecalib.index(track[0]),-3:]
+
     #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
-
-    #     points.append([tx, ty, line[1]])
-    # display_soccer_pitch_ground(points, '16m_right.png',C_cam)
-    
-    # save tracking results coordinates on the pitch
-    tracks_pitch = []
-
-    # print(Projections)
-    for track in tracks:
-        if xymode:
-            x1, y1, x2, y2 = track[2], track[3], track[4], track[5]
-        else:
-            x1, y1, x2, y2 = track[2], track[3], track[2]+track[4], track[3]+track[5]
-        # get the calibration of the corresponding frames
-        # print(framecalib == track[0])
-        if track[0] not in framecalib:
-            continue
-        P = Projections[framecalib.index(track[0])]
-        C_cam = calib[framecalib.index(track[0]),-3:]
-
-        tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
         
-        # frame id, track id, x, z
-        tracks_pitch.append([track[0], track[1], tx, ty])
+    #     # frame id, track id, x, z
+    #     tracks_pitch.append([track[0], track[1], tx, ty])
     
-    np.savetxt('/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24_pitch.txt', np.array(tracks_pitch), delimiter=',')
+    # np.savetxt('/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24_pitch.txt', np.array(tracks_pitch), delimiter=',')
+
+
+    # visualize tracking result
+    result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_right.txt'
+    output_file = result_file.replace('.txt','.mp4')
+    videoWriter = cv2.VideoWriter(output_file, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), FPS, (int(WIDTH//RESOLUTION), int(HEIGHT//RESOLUTION)))
+    track_res = np.genfromtxt(result_file,delimiter=',')
+    print(track_res.shape)
+    visualize_tracks_on_pitch(track_res)
 
     # img2 = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC CAM1/img/image0001.jpg")
     # calib_file2 = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
