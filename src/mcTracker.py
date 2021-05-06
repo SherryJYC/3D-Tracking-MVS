@@ -50,18 +50,18 @@ class Target():
         self.update_vel()
 
     def get_last_pos(self, cur_frame):
+        
         if self.v[0] == 0 and self.v[1] == 0:
             return self.last_pos
         else:
-            x = (cur_frame - self.last_pos.t)*self.v[0]
-            z = (cur_frame - self.last_pos.t)*self.v[1]
+            x = (cur_frame - self.last_pos.t)*self.v[0] + self.last_pos.x
+            z = (cur_frame - self.last_pos.t)*self.v[1] + self.last_pos.z
             return Position(x, z, self.last_pos.t)
 
     def set_id(self, newid):
         self.id = newid
     
     def update_vel(self):
-        
         if(self.pos_num < 2):
             return        
         elif(self.pos_num < 6):
@@ -190,7 +190,10 @@ class Pitch():
             # combine temp_target_list to target_list
             costmat = np.full((len(self.target_list), len(self.temp_target_list)), np.inf)
             for i, pos in enumerate(self.target_list):
-                x, z, t_pos = pos.last_pos.x, pos.last_pos.z, pos.last_pos.t
+                target_last_pos = pos.get_last_pos(t)
+                x, z, t_pos = target_last_pos.x, target_last_pos.z, target_last_pos.t
+#                x, z, t_pos = pos.last_pos.x, pos.last_pos.z, pos.last_pos.t
+
                 for j, pos_temp in enumerate(self.temp_target_list):
                     x_temp, z_temp, t_pos_temp = pos_temp.last_pos.x, pos_temp.last_pos.z, pos_temp.last_pos.t
                     # inf cost for objects far away temporally
