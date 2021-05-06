@@ -40,7 +40,7 @@ def main(args):
     print('find {} cameras in frame {} to {}'.format(len(pitch.cam_list), pitch.tstart, pitch.tend))
 
     # main process
-    pitch.run()
+    pitch()
 
 
 if __name__ == '__main__':
