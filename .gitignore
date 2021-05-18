@@ -1,6 +1,6 @@
 # data folder
 output/
-data/
+*data/
 experiment
 # Byte-compiled / optimized / DLL files
 __pycache__/

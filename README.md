@@ -53,7 +53,7 @@ data
 python src/runMCTRacker.py 
 ```
 
-## Evaludation
+## Evaluation
 
 - Visualize results
 
@@ -69,7 +69,8 @@ python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=o
 - Produce quantitative result
 
 ```
-python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor
+# <fid, objid, x, y, w, h, .., ...>
+python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_filtered
 
 ```
 

@@ -15,6 +15,8 @@ class file
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
+PENALTY_REID = 2
+
 class Position():
     """
     store a position object (3d)
@@ -30,13 +32,15 @@ class Target():
     """
     store a target object
     """
-    def __init__(self, pos, trackid):
+    def __init__(self, pos, trackid, teamid):
         self.id = trackid
         self.last_pos = pos
         self.last_frame = pos.t
         self.pos_num = 1
         self.pos_list = [pos]
         self.v = [0, 0]
+
+        self.teamid = teamid
 
     def add_pos(self, pos):
         '''
@@ -95,11 +99,11 @@ class Camera():
         self.read_pos_from_file()
 
     def read_pos_from_file(self):
-        # <frame id, obj id, x, z>
+        # <frame id, obj id, x, z> =>  <frame id, obj id, x, z, regionid, teamid>
         newbboxs = []
-        bboxs = np.genfromtxt(self.cam_file, delimiter=',', usecols=(0, 1, 2, 3))
+        bboxs = np.genfromtxt(self.cam_file, delimiter=',', usecols=(0, 1, 2, 3, 4))
         for box in bboxs:
-            t, objid, x, z = box[0], box[1], box[2], box[3]
+            t, objid, x, z, teamid = box[0], box[1], box[2], box[3], box[4]
             # check if position valid (inside)
             if abs(x) > self.width or abs(z) > self.height:
                 continue
@@ -116,7 +120,7 @@ class Camera():
                 else:
                     regionid = 4
 
-            newbboxs.append([t, objid, x, z, regionid])
+            newbboxs.append([t, objid, x, z, regionid, teamid])
             self.tend = t
         self.bboxs = np.array(newbboxs)
 
@@ -191,15 +195,18 @@ class Pitch():
             costmat = np.full((len(self.target_list), len(self.temp_target_list)), np.inf)
             for i, pos in enumerate(self.target_list):
                 target_last_pos = pos.get_last_pos(t)
-                x, z, t_pos = target_last_pos.x, target_last_pos.z, target_last_pos.t
+                x, z, t_pos, teamid = target_last_pos.x, target_last_pos.z, target_last_pos.t, pos.teamid
 #                x, z, t_pos = pos.last_pos.x, pos.last_pos.z, pos.last_pos.t
 
                 for j, pos_temp in enumerate(self.temp_target_list):
-                    x_temp, z_temp, t_pos_temp = pos_temp.last_pos.x, pos_temp.last_pos.z, pos_temp.last_pos.t
+                    x_temp, z_temp, t_pos_temp, teamid_temp = pos_temp.last_pos.x, pos_temp.last_pos.z, pos_temp.last_pos.t, pos_temp.teamid
                     # inf cost for objects far away temporally
                     if abs(t_pos - t_pos_temp) > self.disappear_allow:
                         continue
+                    # more cost for objects with different team id
                     costmat[i, j] = np.linalg.norm(np.array([x, z] - np.array([x_temp, z_temp])))
+                    if not teamid == teamid_temp:
+                        costmat[i, j] *= PENALTY_REID
             # add trash bin
             costmat = np.vstack((costmat, np.ones((len(self.target_list), len(self.temp_target_list))) * self.trash_score))
             costmat = np.hstack((costmat, np.ones((len(self.target_list)*2, len(self.temp_target_list))) * self.trash_score))
@@ -219,7 +226,7 @@ class Pitch():
                 # also update velocity for target
                 
 
-            # form target in unmatched, but newly detected track (col)
+            # for target in unmatched, but newly detected track (col)
             for c in range(len(self.temp_target_list)):
                 if c not in valid_col:
                     target = self.temp_target_list[c]
@@ -230,16 +237,21 @@ class Pitch():
         print('tracked {} targets at end frame {}'.format(len(self.target_list), self.tend))
 
     def matchInRegion(self, region, bbox1, bbox2, tcur, temp=False):
-        bbox1_region = bbox1[bbox1[:, -1] == region]
-        bbox1_region = bbox1_region[:, 2:4]
-        bbox2_region = bbox2[bbox2[:, -1] == region]
-        bbox2_region = bbox2_region[:, 2:4]
+        bbox1_region_full = bbox1[bbox1[:, -1] == region]
+        bbox1_region = bbox1_region_full[:, 2:4]
+        bbox2_region_full = bbox2[bbox2[:, -1] == region]
+        bbox2_region = bbox2_region_full[:, 2:4]
 
         # compute cost matrix
         costmat = np.full((len(bbox1_region), len(bbox2_region)), np.inf)
         for i, xz1 in enumerate(bbox1_region):
             for j, xz2 in enumerate(bbox2_region):
+
                 costmat[i, j] = np.linalg.norm(xz1 - xz2)
+                # check team id, assign more dist for different team id
+                if not bbox1_region_full[i, 4] == bbox2_region_full[i, 4]:
+                    costmat[i, j] *= PENALTY_REID
+
         # add trash bin
         costmat = np.vstack((costmat, np.ones((len(bbox1_region), len(bbox2_region))) * self.trash_score))
         costmat = np.hstack((costmat, np.ones((len(bbox1_region) * 2, len(bbox2_region))) * self.trash_score))
@@ -254,8 +266,8 @@ class Pitch():
             valid_row.append(r)
             valid_col.append(c)
             # create target
-            x, z, t = (bbox1_region[r, 0] + bbox2_region[c, 0]) / 2, (bbox1_region[r, 1] + bbox2_region[c, 1]) / 2, tcur
-            target = Target(Position(x, z, t), self.free_trackid)
+            x, z, t, teamid = (bbox1_region[r, 0] + bbox2_region[c, 0]) / 2, (bbox1_region[r, 1] + bbox2_region[c, 1]) / 2, tcur, bbox1_region_full[r, 4]
+            target = Target(Position(x, z, t), self.free_trackid, teamid)
 
             if temp:
                 self.temp_target_list.append(target)
@@ -267,8 +279,8 @@ class Pitch():
         for r in range(len(bbox1_region)):
             if r in valid_row:
                 continue
-            x, z, t = bbox1_region[r, 0], bbox1_region[r, 1], tcur
-            target = Target(Position(x, z, t), self.free_trackid)
+            x, z, t, teamid = bbox1_region[r, 0], bbox1_region[r, 1], tcur, bbox1_region_full[r, 4]
+            target = Target(Position(x, z, t), self.free_trackid, teamid)
 
             if temp:
                 self.temp_target_list.append(target)
@@ -280,8 +292,8 @@ class Pitch():
         for c in range(len(bbox2_region)):
             if c in valid_col:
                 continue
-            x, z, t = bbox2_region[c, 0], bbox2_region[c, 1], tcur
-            target = Target(Position(x, z, t), self.free_trackid)
+            x, z, t, teamid = bbox2_region[c, 0], bbox2_region[c, 1], tcur, bbox2_region_full[c, 4]
+            target = Target(Position(x, z, t), self.free_trackid, teamid)
 
             if temp:
                 self.temp_target_list.append(target)

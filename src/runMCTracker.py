@@ -19,9 +19,11 @@ from mcTracker import Camera, Pitch
 
 def config():
     a = argparse.ArgumentParser()
-    a.add_argument("--input_cam1", help="track result of cam1", default='data/tracks/16m_cam1_pitch.txt')
-    a.add_argument("--input_cam2", help="track result of cam2", default='data/tracks/16m_right_pitch.txt')
-    a.add_argument("--output_file", help="output file name", default='cam1_right.txt')
+    # a.add_argument("--input_cam1", help="track result of cam1", default='data/tracks/16m_cam1_pitch.txt')
+    # a.add_argument("--input_cam2", help="track result of cam2", default='data/tracks/16m_right_pitch.txt')
+    a.add_argument("--input_cam1", help="track result of cam1", default='data/tracks/cam1_filtered_team_pitch.txt')
+    a.add_argument("--input_cam2", help="track result of cam2", default='data/tracks/right_filtered_team_pitch.txt')
+    a.add_argument("--output_file", help="output file name", default='cam1_right_team.txt')
 
     args = a.parse_args()
     return args
