@@ -193,41 +193,42 @@ def visualize_tracks_on_pitch(tracks):
 
 if __name__ == "__main__":
 
-    # img = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m CAM1/img/image0001.jpg")
-    # calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
-    # calib = np.genfromtxt(calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
-    # imgname = np.genfromtxt(calib_file,delimiter=',',usecols=(7),dtype=str)
-    # framecalib = [int(x.split('.')[0][5:]) for x in imgname]
-    # result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24.txt'
-    # xymode = False
-    # tracks = np.genfromtxt(result_file,delimiter=',',usecols=(0,1,2,3,4,5)).astype(int)
+    img = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m RIGHT/img/image0001.jpg")
+    calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/RIGHT/calib.txt'
+    calib = np.genfromtxt(calib_file,delimiter=',',usecols=(1,2,3,4,5,6))
+    imgname = np.genfromtxt(calib_file,delimiter=',',usecols=(7),dtype=str)
+    framecalib = [int(x.split('.')[0][5:]) for x in imgname]
+    result_file = '/scratch2/wuti/Others/3DVision/test_result_filtered_team/16m_right_filtered_team.txt'
+    xymode = False
+    tracks = np.genfromtxt(result_file,delimiter=',',usecols=(0,1,2,3,4,5,10)).astype(int)
 
 
     # print(imgname)
     
-    # cx,cy = 960, 540
-    # Projections = [computeP(calibline, cx, cy) for calibline in calib]
-    # print(len(Projections),len(calib))
+    cx,cy = 960, 540
+    Projections = [computeP(calibline, cx, cy) for calibline in calib]
+    print(len(Projections),len(calib))
 
-    # # lines = tracks[tracks[:,0]==1]
-    # # print(lines)
-    # # P = computeP(calib[0], cx, cy)
-    # C_cam = calib[0,-3:]
-    # # print(C_cam)
+    # lines = tracks[tracks[:,0]==1]
+    # print(lines)
+    # P = computeP(calib[0], cx, cy)
+    C_cam = calib[0,-3:]
+    # print(C_cam)
 
-    # plane_normal = point_normal_eq(plane,origin)
-    # # print(plane_normal)
-    # # points = []
-    # # for line in lines:
-    # #     if xymode:
-    # #         x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
-    # #     else:
-    # #         x1, y1, x2, y2 = line[2], line[3], line[2]+line[4], line[3]+line[5]
-    # #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
+    plane_normal = point_normal_eq(plane,origin)
+    # print(plane_normal)
+    # points = []
+    # for line in lines:
+    #     if xymode:
+    #         x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
+    #     else:
+    #         x1, y1, x2, y2 = line[2], line[3], line[2]+line[4], line[3]+line[5]
+    #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
 
-    # #     points.append([tx, ty, line[1]])
-    # # display_soccer_pitch_ground(points, '16m_right.png',C_cam)
-    
+    #     points.append([tx, ty, line[1]])
+    # display_soccer_pitch_ground(points, '16m_right.png',C_cam)
+
+
     # # save tracking results coordinates on the pitch
     # tracks_pitch = []
 
@@ -246,14 +247,13 @@ if __name__ == "__main__":
 
     #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
         
-    #     # frame id, track id, x, z
-    #     tracks_pitch.append([track[0], track[1], tx, ty])
+    #     # frame id, track id, x, z, team id
+    #     tracks_pitch.append([track[0], track[1], tx, ty, track[-1]])
     
-    # np.savetxt('/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_filtered_4.24_pitch.txt', np.array(tracks_pitch), delimiter=',')
-
+    # np.savetxt(result_file.replace('.txt','_pitch.txt'), np.array(tracks_pitch), delimiter=',')
 
     # visualize tracking result
-    result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered/cam1_right.txt'
+    result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered_team/cam1_right_team.txt'
     output_file = result_file.replace('.txt','.mp4')
     videoWriter = cv2.VideoWriter(output_file, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), FPS, (int(WIDTH//RESOLUTION), int(HEIGHT//RESOLUTION)))
     track_res = np.genfromtxt(result_file,delimiter=',')
