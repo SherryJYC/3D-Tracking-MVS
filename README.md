@@ -98,9 +98,12 @@ python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_
 
 ## Result
 
+> 0125-0135 right moving camera
 ```
          IDF1   IDP   IDR  Rcll  Prcn GT MT PT ML   FP  FN IDs   FM  MOTA  MOTP IDt IDa IDm
-RIGHT_tracktor   72.6% 69.7% 75.8% 85.9% 79.0% 25 19  6  0 1376 848  21  213 62.8% 0.322   7  15   1
+tracktor   72.6% 69.7% 75.8% 85.9% 79.0% 25 19  6  0 1376 848  21  213 62.8% 0.322   7  15   1
+IoU   61.8% 53.3% 73.6% 82.9% 60.0% 25 17  8  0 3330 1029  46  279 26.9% 0.336  15  23   1
+
 OVERALL 72.6% 69.7% 75.8% 85.9% 79.0% 25 19  6  0 1376 848  21  213 62.8% 0.322   7  15   1
 
 ```

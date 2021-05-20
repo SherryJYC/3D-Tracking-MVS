@@ -59,7 +59,7 @@ if __name__ == '__main__':
                         help="low detection threshold")
     parser.add_argument('-sh', '--sigma_h', type=float, default=0.5,
                         help="high detection threshold")
-    parser.add_argument('-si', '--sigma_iou', type=float, default=0.5,
+    parser.add_argument('-si', '--sigma_iou', type=float, default=0.2,
                         help="intersection-over-union threshold")#0.5
     parser.add_argument('-tm', '--t_min', type=float, default=2,
                         help="minimum track length")
