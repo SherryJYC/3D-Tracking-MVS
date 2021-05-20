@@ -45,7 +45,19 @@ data
 - [Download preprocessed data](https://polybox.ethz.ch/index.php/s/CvcT5pxOY90bpIF)
 > only include homography and config files, large image folder not included
 
-
+## Single-camera tracking
+- Train Faster RCNN
+```
+Jiao Ying ???
+```
+- Run Tracktor
+```
+Jiao Ying ???
+```
+- Run ReID(team id) model
+```
+Jiao Ying ???
+```
 ## Cross-camera link
 
 - Run multi-cam tracker
@@ -53,9 +65,15 @@ data
 python src/runMCTRacker.py 
 ```
 
+- Run multi-cam tracker with team id constraint
+```
+python src/runMCTRacker.py --doreid
+```
+
 ## Evaluation
 
-- Visualize results
+- Produce quatitative results (visualize results)
+> visualize 2d bounding box
 
 ```
 # if format <x, y, w, h>
@@ -64,7 +82,11 @@ python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=o
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/iou/16m_right.txt --xymode
 # if 3d mode
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/RIGHT.txt --calib_file=data/calibration_results/0125-0135/RIGHT/calib.txt  --pitchmode
+```
+> visualize 3d position on the pitch
 
+```
+Tianyu ??
 ```
 - Produce quantitative result
 
@@ -73,6 +95,13 @@ python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=o
 python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_filtered
 
 ```
+
+## Acknowledgement
+We would like to thank the following Github repos or softwares:
+[Supervisely]()
+[Tracktor++]()
+
+
 
 ## Useful literature
 

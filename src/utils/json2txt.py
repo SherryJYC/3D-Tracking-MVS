@@ -5,61 +5,96 @@ Created on Thu Mar 18 16:43:40 2021
 
 @author: yujiang
 """
+"""
+
+convert label.json to txt file
+
+format:
+    <frame id>, <object id>, <x1>, <y1>, <w>, <h>, <x2>, <y2>
+
+"""
 import os 
 import json
-import argparse
 import numpy as np
+import argparse
 
-'''
-convert json to txt in format:
-    frame id, id, x1, y1, x2, y2, confidence, class (team) id
+def config():
+    a = argparse.ArgumentParser()
+    a.add_argument("--jsonfile", help="path to json file", default='./data/json/annotations.json')
+    a.add_argument("--jsonfolder", help="path to json folder", default='./data/dataset5/cam4/json')
+    a.add_argument("--output", help="path to output text file", default='./data/dataset5/cam4/labels.txt')
+    a.add_argument("--muljson",  help="whether to combine multiple json file", action="store_true")
+    args = a.parse_args()    
+    return args
 
-'''
-
-def loadT(config_file):
-    # projection param from proj_config.txt
-    param = np.genfromtxt(config_file, delimiter=',').astype(int)
-    woffset = param[2]
-    hoffset = param[3]
-    scale= param[4]/10
-    
-    T = np.eye(3,3)*scale
-    T[0,-1], T[1,-1] = woffset, hoffset
-    return T
-
-def json2text(args):
-    
-    f = open(args.jsonfile,) 
+def json2text(jsonfile):
+    f = open(jsonfile,) 
     data = json.load(f)
-    prefix = args.jsonfile[:-len(args.jsonfile.split('/')[-1])]
-    T = loadT(os.path.join(prefix, 'proj_config.txt'))
     
-    playerid = []
-    
-    cameras = data['cameras']
-    for cam in cameras:
-        rows = []
-        for frame in cam['frames']:
-            frameid = frame['frame_id']
-            for instance in frame['instances']:
-                if instance['id'] not in playerid:
-                    playerid.append(instance['id'])
-                instance['bbox'] = np.array(instance['bbox']).astype(float)
-#                xy1 = np.dot(T, np.array([instance['bbox'][0], instance['bbox'][1], 1]))
-#                xy2 = np.dot(T, np.array([instance['bbox'][2], instance['bbox'][3], 1]))
-                xy1 = np.array([instance['bbox'][0], instance['bbox'][1], 1])
-                xy2 = np.array([instance['bbox'][2], instance['bbox'][3], 1])
-                
-#                rows.append([frameid+1, playerid.index(instance['id']), xy1[0], xy1[1], xy2[0], xy2[1], instance['confidence'], instance['class']])
-                rows.append([frameid+1, playerid.index(instance['id']), xy1[0], xy1[1], xy2[0], xy2[1], 1, -1, -1, -1])
+    rows = []
+    objectkey = np.empty((3,))
+    for obj in data['objects']:
+        # get drone id: 1, 2, 3 => 0, 1, 2
+        droneidx = int(obj['classTitle'][-1]) - 1
+        objectkey[droneidx] = obj['id']
+
+    objectkey = objectkey.astype('int32').tolist()
+
+    for frame in data['frames']:
+        frameid = frame['index']
+        instances = frame['figures']
+        for instance in instances:
+            points = instance['geometry']['points']['exterior']
+            w = points[1][0]-points[0][0]
+            h = points[1][1]-points[0][1]
+            objectid = objectkey.index(instance['objectId'])
+            rows.append([frameid, objectid, points[0][0], points[0][1], w, h, points[1][0], points[1][1]])
+    return rows
+
+def muljson2text(json_folder):
+    json_files = [file for file in os.listdir(json_folder) if os.path.splitext(file)[-1]=='.json']
+    start = 0
+    rows = []
+    json_files.sort()
+    print(json_files)
+    for json_file in json_files:
+        f = open(os.path.join(json_folder, json_file),) 
+        data = json.load(f)
+        framecount = data['framesCount']
         
-        np.savetxt(os.path.join(prefix, cam['camera_id']+'.txt'), np.array(rows).astype('float'), delimiter=',')
-        np.savetxt(os.path.join(prefix, 'id_mapping'+'.txt'), np.array(playerid).astype(str), delimiter=',', fmt='%s')
+        # for a single json, convert to txt
+        objectkey = np.empty((3,))
+        for obj in data['objects']:
+            # get drone id: 1, 2, 3 => 0, 1, 2
+            droneidx = int(obj['classTitle'][-1]) - 1
+            objectkey[droneidx] = obj['id']
+
+        objectkey = objectkey.astype('int32').tolist()
+    
+        for frame in data['frames']:
+            frameid = frame['index']
+            instances = frame['figures']
+            for instance in instances:
+                points = instance['geometry']['points']['exterior']
+                w = points[1][0]-points[0][0]
+                h = points[1][1]-points[0][1]
+                objectid = objectkey.index(instance['objectId'])
+                rows.append([frameid+start, objectid, points[0][0], points[0][1], w, h, points[1][0], points[1][1]])
+                
+        # accumulate start frame idx
+        start +=framecount
+    return rows
+
 if __name__=="__main__":
     
-    a = argparse.ArgumentParser()
-    a.add_argument("--jsonfile", help="path to json file", default='./data/0125-0135/0125-0135.json')
-
-    args = a.parse_args()    
+    args = config()
     
-    json2text(args)
+    if not os.path.exists(args.output[0:-len(args.output.split('/')[-1])]):
+        os.mkdir(args.output[0:-len(args.output.split('/')[-1])])
+    
+    if args.muljson==True:
+        print('mul json2text')
+        np.savetxt(args.output, np.array(muljson2text(args.jsonfolder)), delimiter=',')
+    else:
+        print('json2text')
+        np.savetxt(args.output, np.array(json2text(args.jsonfile)), delimiter=',')
