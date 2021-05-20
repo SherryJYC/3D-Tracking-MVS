@@ -96,6 +96,15 @@ python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_
 
 ```
 
+## Result
+
+```
+         IDF1   IDP   IDR  Rcll  Prcn GT MT PT ML   FP  FN IDs   FM  MOTA  MOTP IDt IDa IDm
+RIGHT_tracktor   72.6% 69.7% 75.8% 85.9% 79.0% 25 19  6  0 1376 848  21  213 62.8% 0.322   7  15   1
+OVERALL 72.6% 69.7% 75.8% 85.9% 79.0% 25 19  6  0 1376 848  21  213 62.8% 0.322   7  15   1
+
+```
+
 ## Acknowledgement
 We would like to thank the following Github repos or softwares:
 [Supervisely]()

@@ -45,7 +45,8 @@ def json2text(jsonfile):
             else:
                 droneidx = int(obj['classTitle'][5:])+51
         # droneidx = int(obj['classTitle'][-1]) - 1
-        objectkey[droneidx] = obj['id']
+        print(obj)
+        objectkey[droneidx] = obj['key'] #obj['id']
 
     objectkey = objectkey.astype('int32').tolist()
     print(objectkey)
@@ -99,9 +100,9 @@ def muljson2text(json_folder):
 if __name__=="__main__":
     
     a = argparse.ArgumentParser()
-    a.add_argument("--jsonfile", help="path to json file", default='./data/json/annotations.json')
+    a.add_argument("--jsonfile", help="path to json file", default='./data/0125-0135/RIGHT/right_gt.json')
     a.add_argument("--jsonfolder", help="path to json folder", default='./data/dataset5/cam4/json')
-    a.add_argument("--output", help="path to output text file", default='./data/dataset5/cam4/labels.txt')
+    a.add_argument("--output", help="path to output text file", default='./data/0125-0135/RIGHT/right_gt.txt')
     a.add_argument("--muljson", help="whether to combine multiple json file", default=True)
     args = a.parse_args()    
     
