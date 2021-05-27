@@ -149,7 +149,8 @@ class Camera_reid():
                     regionid = 4
 
             newbboxs.append([t, objid, x, z, regionid, teamid])
-            self.tend = t
+            if self.tend < t:
+                self.tend = t
         self.bboxs = np.array(newbboxs)
 
 
@@ -222,6 +223,10 @@ class Pitch_reid():
             bbox1 = bbox1[bbox1[:, 0] == t]
             bbox2 = self.cam_list[1].bboxs
             bbox2 = bbox2[bbox2[:, 0] == t]
+
+            if len(bbox1) < 1 or len(bbox2) < 1:
+                print('skip frame {}'.format(t))
+                continue
 
             # empty temp target list
             self.temp_target_list = []

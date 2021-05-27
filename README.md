@@ -58,6 +58,10 @@ Jiao Ying ???
 ```
 Jiao Ying ???
 ```
+- Convert tracking results to coordinates on the pitch
+```
+python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --xymode
+```
 ## Cross-camera link
 
 - Run multi-cam tracker
@@ -84,9 +88,13 @@ python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=o
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/RIGHT.txt --calib_file=data/calibration_results/0125-0135/RIGHT/calib.txt  --pitchmode
 ```
 > visualize 3d position on the pitch
-
+- visualize tracking result with ground truth and voronoi (with footyviz)
 ```
-Tianyu ??
+python src/visualize_on_pitch.py --result_file=PATH_TO_TRACKING_RESULT --ground_truth=PATH_TO_GROUND_TRUTH
+```
+- visualize ground truth on camera frames
+```
+python src/visualize_tracab --img_path=PATH_TO_IMAGES --calib_path=PATH_TO_CALIB --gt_path=PATH_TO_TRACAB_GT --output_path=PATH_TO_OUTPUT_VIDEO
 ```
 - Produce quantitative result
 

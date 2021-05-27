@@ -51,7 +51,9 @@ def main(args):
         pitch = Pitch(output=output_file)
 
     pitch.add_cam(cam1)
+    print(pitch.tend)
     pitch.add_cam(cam2)
+    print(pitch.tend)
     print('find {} cameras in frame {} to {}'.format(len(pitch.cam_list), pitch.tstart, pitch.tend))
 
     # main process

@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import os
 import math
+import argparse
 
 SCALE = 1
 RESOLUTION = 0.1
@@ -235,17 +236,27 @@ def visualize_tracks_on_pitch(tracks):
 
 if __name__ == "__main__":
 
-    img = cv2.imread(
-        "/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m RIGHT/img/image0001.jpg"
-    )
-    calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/RIGHT/calib.txt'
+    a = argparse.ArgumentParser()
+    a.add_argument('--calib_path', type=str, help='Path to the calibration file')
+    a.add_argument('--res_path', type=str, help='Path to the tracking result')
+    a.add_argument('--xymode', action='store_true', help='Whether to use XY mode/WH mode to parse the tracking result')
+    a.add_argument('--viz', action='store_true', help='Whether to visualize the tracking result')
+
+    opt = a.parse_args()
+
+    # img = cv2.imread(
+    #     "/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m RIGHT/img/image0001.jpg"
+    # )
+    # calib_file = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/RIGHT/calib.txt'
+    calib_file = opt.calib_path
     calib = np.genfromtxt(calib_file,
                           delimiter=',',
                           usecols=(1, 2, 3, 4, 5, 6))
     imgname = np.genfromtxt(calib_file, delimiter=',', usecols=(7), dtype=str)
     framecalib = [int(x.split('.')[0][5:]) for x in imgname]
-    result_file = '/scratch2/wuti/Others/3DVision/test_result_filtered_team/16m_right_filtered_team.txt'
-    xymode = False
+    # result_file = '/scratch2/wuti/Others/3DVision/test_result_filtered_team/16m_right_filtered_team.txt'
+    result_file = opt.res_path
+
     tracks = np.genfromtxt(result_file,
                            delimiter=',',
                            usecols=(0, 1, 2, 3, 4, 5, 10)).astype(int)
@@ -256,83 +267,42 @@ if __name__ == "__main__":
     Projections = [computeP(calibline, cx, cy) for calibline in calib]
     print(len(Projections), len(calib))
 
-    # lines = tracks[tracks[:,0]==1]
-    # print(lines)
-    # P = computeP(calib[0], cx, cy)
     C_cam = calib[0, -3:]
     # print(C_cam)
 
     plane_normal = point_normal_eq(plane, origin)
-    # print(plane_normal)
-    # points = []
-    # for line in lines:
-    #     if xymode:
-    #         x1, y1, x2, y2 = line[2], line[3], line[4], line[5]
-    #     else:
-    #         x1, y1, x2, y2 = line[2], line[3], line[2]+line[4], line[3]+line[5]
-    #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
 
-    #     points.append([tx, ty, line[1]])
-    # display_soccer_pitch_ground(points, '16m_right.png',C_cam)
+    # save tracking results coordinates on the pitch
+    tracks_pitch = []
 
-    # # save tracking results coordinates on the pitch
-    # tracks_pitch = []
+    # print(Projections)
+    for track in tracks:
+        if opt.xymode:
+            x1, y1, x2, y2 = track[2], track[3], track[4], track[5]
+        else:
+            x1, y1, x2, y2 = track[2], track[3], track[2]+track[4], track[3]+track[5]
+        # get the calibration of the corresponding frames
+        # print(framecalib == track[0])
+        if track[0] not in framecalib:
+            continue
+        P = Projections[framecalib.index(track[0])]
+        C_cam = calib[framecalib.index(track[0]),-3:]
 
-    # # print(Projections)
-    # for track in tracks:
-    #     if xymode:
-    #         x1, y1, x2, y2 = track[2], track[3], track[4], track[5]
-    #     else:
-    #         x1, y1, x2, y2 = track[2], track[3], track[2]+track[4], track[3]+track[5]
-    #     # get the calibration of the corresponding frames
-    #     # print(framecalib == track[0])
-    #     if track[0] not in framecalib:
-    #         continue
-    #     P = Projections[framecalib.index(track[0])]
-    #     C_cam = calib[framecalib.index(track[0]),-3:]
+        tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
 
-    #     tx, ty = backproject_pitch(P,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam)
+        # frame id, track id, x, z, team id
+        tracks_pitch.append([track[0], track[1], tx, ty, track[-1]])
 
-    #     # frame id, track id, x, z, team id
-    #     tracks_pitch.append([track[0], track[1], tx, ty, track[-1]])
+    np.savetxt(result_file.replace('.txt','_pitch.txt'), np.array(tracks_pitch), delimiter=',')
 
-    # np.savetxt(result_file.replace('.txt','_pitch.txt'), np.array(tracks_pitch), delimiter=',')
+    # # visualize tracking result
+    # # result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered_team/cam1_right_team.txt'
+    # result_file = '/scratch2/wuti/Others/3DVision/ground_truth/ground_truth_3d/gt_pitch.txt'
 
-    # visualize tracking result
-    result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered_team/cam1_right_team.txt'
-    output_file = result_file.replace('.txt', '.mp4')
-    videoWriter = cv2.VideoWriter(
-        output_file, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), FPS,
-        (int(WIDTH // RESOLUTION), int(HEIGHT // RESOLUTION)))
-    track_res = np.genfromtxt(result_file, delimiter=',')
-    print(track_res.shape)
-    visualize_tracks_on_pitch(track_res)
-
-    # img2 = cv2.imread("/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC CAM1/img/image0001.jpg")
-    # calib_file2 = '/scratch2/wuti/Others/3DVision/calibration_results/0125-0135/CAM1/calib.txt'
-    # calib2 = np.genfromtxt(calib_file2,delimiter=',',usecols=(1,2,3,4,5,6))
-    # result_file2 = '/scratch2/wuti/Others/3DVision/cam1_result/cam1.txt'
-    # track2 = np.genfromtxt(result_file2,delimiter=',',usecols=(0,1,2,3,4,5)).astype(int)
-    # lines2 = track2[track2[:,0]==1]
-    # P2 = computeP(calib2[0], cx, cy)
-    # C_cam2 = calib2[0,-3:]
-    # points2 = []
-
-    # for line2 in lines2:
-    #     x1, y1, x2, y2 = line2[2], line2[3], line2[4], line2[5]
-    #     tx, ty = backproject_pitch(P2,np.array([(x1+x2)/2,y2,1]).reshape(-1,1),C_cam2)
-
-    #     points2.append([tx, ty, line2[1]])
-
-    # display_soccer_pitch_ground(points2, 'cam1.png', C_cam2)
-
-#    K = np.asarray([[ 5502.18, 0.0,     2048.0],
-#                    [ 0.0,     5502.18, 1152.0],
-#                    [ 0.0,     0.0,     1.0]])
-#    R = np.asarray([[ 0.08008822, -0.99655787, -0.02140748],
-#                    [-0.41593093, -0.01389338, -0.90929007],
-#                    [ 0.90586276,  0.08172745, -0.41561194]])
-#    t = np.asarray( [[-3.52350603, -2.12259918, 85.24450696]]).T
-#    P = K @ np.concatenate([R, t], axis=1)
-
-# display_soccer_pitch(img, P)
+    # output_file = result_file.replace('.txt', '.mp4')
+    # videoWriter = cv2.VideoWriter(
+    #     output_file, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), FPS,
+    #     (int(WIDTH // RESOLUTION), int(HEIGHT // RESOLUTION)))
+    # track_res = np.genfromtxt(result_file, delimiter=',')
+    # print(track_res.shape)
+    # visualize_tracks_on_pitch(track_res)
