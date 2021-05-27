@@ -47,6 +47,7 @@ def load_mot(detections, nms_overlap_thresh=None, with_classes=True, nms_per_cla
         idx = raw[:, 0] == i
         bbox = raw[idx, 2:6]
         bbox[:, 2:4] += bbox[:, 0:2]  # x1, y1, w, h -> x1, y1, x2, y2
+        print(bbox)
         #bbox -= 1  # correct 1,1 matlab offset
         scores = raw[idx, 6]
 
@@ -194,7 +195,7 @@ def save_to_csv(out_path, tracks, fmt='motchallenge'):
                        'y': bbox[1]+1,
                        'w': bbox[2] - bbox[0],
                        'h': bbox[3] - bbox[1],
-                       'score': track['max_score']}
+                       'score': -1} #track['max_score']
                 if fmt == 'motchallenge':
                     row['wx'] = -1
                     row['wy'] = -1
