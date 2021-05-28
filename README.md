@@ -60,7 +60,7 @@ Jiao Ying ???
 ```
 - Convert tracking results to coordinates on the pitch
 ```
-python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --xymode
+python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --xymode --reid
 ```
 ## Cross-camera link
 
