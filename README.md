@@ -100,6 +100,12 @@ python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_
 
 > 0125-0135 right moving camera
 ```
+SORT
+         IDF1   IDP   IDR  Rcll  Prcn GT MT PT ML   FP   FN IDs   FM   MOTA  MOTP IDt IDa IDm
+RIGHT   58.3% 49.4% 71.3% 83.4% 57.8% 25 15 10  0 3674 1001  27  181  22.0% 0.340   5  23   1
+CAM1    43.8% 35.3% 57.5% 67.9% 41.7% 22  6 15  1 2786  942  36  112 -28.2% 0.360   7  27   0
+OVERALL 53.3% 44.4% 66.8% 78.3% 52.1% 47 21 25  1 6460 1943  63  293   5.5% 0.346  12  50   1
+
 IOU
          IDF1   IDP   IDR  Rcll  Prcn GT MT PT ML   FP   FN IDs   FM   MOTA  MOTP IDt IDa IDm
 RIGHT   61.8% 53.3% 73.6% 82.9% 60.0% 25 17  8  0 3330 1029  46  279  26.9% 0.336  15  23   1
@@ -111,6 +117,7 @@ Tracktor
 RIGHT   72.6% 69.7% 75.8% 85.9% 79.0% 25 19  6  0 1376  848  21  213  62.8% 0.322   7  15   1
 CAM1    49.3% 39.4% 65.9% 69.4% 41.5% 22  6 15  1 2871  899  17  146 -29.0% 0.344  10   7   0
 OVERALL 63.7% 56.7% 72.6% 80.5% 63.0% 47 25 21  1 4247 1747  38  359  32.7% 0.328  17  22   1
+
 ```
 
 ## Acknowledgement
