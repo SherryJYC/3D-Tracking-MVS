@@ -62,16 +62,19 @@ Jiao Ying ???
 ```
 python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --xymode --reid
 ```
-## Cross-camera link
+## Across-camera link
 
-- Run multi-cam tracker
+- Run two-cam tracker
 ```
 python src/runMCTRacker.py 
+
+# add team id constraint
+python src/runMCTRacker.py --doreid
 ```
 
-- Run multi-cam tracker with team id constraint
+- Run multi-cam tracker (e.g. 4 cams)
 ```
-python src/runMCTRacker.py --doreid
+python src/runTreeMCTracker.py 
 ```
 
 ## Evaluation
@@ -129,9 +132,9 @@ OVERALL 63.7% 56.7% 72.6% 80.5% 63.0% 47 25 21  1 4247 1747  38  359  32.7% 0.32
 ```
 
 ## Acknowledgement
-We would like to thank the following Github repos or softwares:
-[Supervisely]()
-[Tracktor++]()
+We would like to thank the following Github repos or softwares: <br/>
+- [Supervisely]()
+- [Tracktor++]()
 
 
 
