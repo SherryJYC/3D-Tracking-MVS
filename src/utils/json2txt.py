@@ -24,11 +24,13 @@ def json2text(jsonfile):
         # judge -> 51+
         print(obj['classTitle'])
         droneidx = 60
-        if 'bbox' in obj['classTitle']:
-            if obj['classTitle'] == 'bbox':
-                droneidx = 1
-            else:
-                droneidx = int(obj['classTitle'][4:])+1
+        if obj['classTitle'][0] == 'p':
+            # if obj['classTitle'] == 'p':
+            #     droneidx = 1
+            # else:
+            #     droneidx = int(obj['classTitle'][1:])+1
+
+            droneidx = int(obj['classTitle'][1:])
         if 'goalkeeper' in obj['classTitle']:
             if obj['classTitle'] == 'goalkeeper':
                 droneidx = 31
@@ -39,11 +41,11 @@ def json2text(jsonfile):
                 droneidx = 41
             else:
                 droneidx = int(obj['classTitle'][5:])+41
-        if 'judge' in obj['classTitle']:
-            if obj['classTitle'] == 'judge':
+        if 'referee' in obj['classTitle']:
+            if obj['classTitle'] == 'referee':
                 droneidx = 51
             else:
-                droneidx = int(obj['classTitle'][5:])+51
+                droneidx = int(obj['classTitle'][7:])+51
         # droneidx = int(obj['classTitle'][-1]) - 1
         print(obj)
         objectkey[droneidx] = obj['key'] #obj['id']
