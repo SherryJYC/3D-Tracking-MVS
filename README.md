@@ -102,8 +102,11 @@ python src/visualize_tracab --img_path=PATH_TO_IMAGES --calib_path=PATH_TO_CALIB
 - Produce quantitative result
 
 ```
-# <fid, objid, x, y, w, h, .., ...>
+# 2d <fid, objid, x, y, w, h, .., ...>
 python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_filtered
+
+# 3d
+python src/utils/eval3d.py --pred=output/pitch/EPTS_3_pitch.txt_EPTS_4_pitch.txt.txt --fixcam  --gt=data/fixedcam/gt_pitch_550.txt
 
 ```
 
