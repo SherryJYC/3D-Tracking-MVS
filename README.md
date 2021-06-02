@@ -1,5 +1,9 @@
 # 3D-Tracking-MVS
-Course project for 3DV 2021 Spring @ ETH Zurich
+Project for 3DV 2021 Spring @ ETH Zurich <br/>
+This repo contains a full pipeline to support 3D position tracking of soccer players, with multi-view calibrated moving/fixed video sequences as inputs. 
+- In single-camera tracking stage, Tracktor++ is used to get 2D positions
+- In multi-camera tracking stage, 2D positions are projected into 3D positions. Then across-camera association is achieved as an optimization problem with spatial, temporal and visual constraints.
+- In the end, visualization in 2D, 3D and a voronoi visualization for sports coaching purpose are provided.
 
 ## Preprocessing 
 - Split video into image frames
@@ -62,7 +66,7 @@ Jiao Ying ???
 ```
 python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --xymode --reid
 ```
-## Across-camera link
+## Across-camera association
 
 - Run two-cam tracker
 ```
@@ -108,7 +112,6 @@ python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_
 # 3d
 python src/utils/eval3d.py --pred=output/pitch/EPTS_3_pitch.txt_EPTS_4_pitch.txt.txt --fixcam  --gt=data/fixedcam/gt_pitch_550.txt
 python src/utils/eval3d.py --fixcam --boxplot
-
 ```
 
 <!--
