@@ -1,4 +1,4 @@
-# 3D-Tracking-MVS
+# 3D Player Tracking with Multi-View Stream
 Project for 3DV 2021 Spring @ ETH Zurich [[Report Link]()] <br/>
 <br/>
 This repo contains a full pipeline to support 3D position tracking of soccer players, with multi-view calibrated moving/fixed video sequences as inputs. 
