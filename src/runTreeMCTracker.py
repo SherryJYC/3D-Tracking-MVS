@@ -28,21 +28,29 @@ def config():
     a.add_argument("--camlist", nargs="+", default=['data/tracks/fixcam/EPTS_1_pitch.txt', 
                                             'data/tracks/fixcam/EPTS_2_pitch.txt', 
                                             'data/tracks/fixcam/EPTS_3_pitch.txt', 
-                                            'data/tracks/fixcam/EPTS_4_pitch.txt'])
+                                            'data/tracks/fixcam/EPTS_4_pitch.txt', 
+                                            'data/tracks/fixcam/EPTS_5_pitch.txt',
+                                            'data/tracks/fixcam/EPTS_6_pitch.txt',
+                                            'data/tracks/fixcam/EPTS_7_pitch.txt',
+                                            'data/tracks/fixcam/EPTS_8_pitch.txt'])
 
     args = a.parse_args()
     return args
 
 def pairwiseMatch(input_cam1, input_cam2, doreid=False):
+
+    output_file = os.path.basename(input_cam1) + '_' + os.path.basename(input_cam2) +'.txt'
+    output_dir = os.path.join(input_cam1[:-len(os.path.basename(input_cam1))], 'results')
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    output_file = os.path.join(output_dir, output_file)
+
     if doreid:
         print('reid matching ...')
         # load camera
         cam1 = Camera_reid(input_cam1, os.path.basename(input_cam1))
         cam2 = Camera_reid(input_cam2, os.path.basename(input_cam2))
 
-        output_file = os.path.basename(input_cam1) + '_' + os.path.basename(input_cam2) +'.txt'
-        # create pitch
-        output_file = os.path.join(input_cam1[:-len(os.path.basename(input_cam1))], output_file)
         pitch = Pitch_reid(output=output_file)
     
     else:
@@ -51,9 +59,6 @@ def pairwiseMatch(input_cam1, input_cam2, doreid=False):
         cam1 = Camera(input_cam1, os.path.basename(input_cam1))
         cam2 = Camera(input_cam2, os.path.basename(input_cam2))
 
-        output_file = os.path.basename(input_cam1) + '_' + os.path.basename(input_cam2) +'.txt'
-        # create pitch
-        output_file = os.path.join(input_cam1[:-len(os.path.basename(input_cam1))], output_file)
         pitch = Pitch(output=output_file)
 
     pitch.add_cam(cam1)
