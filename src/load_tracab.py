@@ -5,8 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from glob import glob
 import math
-
+import pandas as pd
 from calib import computeP
+from scipy import interpolate
 
 FPS = 25
 team_color_list = [(0,0,255), (255,255,255), (0,255,0), (255,0,0)]
@@ -36,6 +37,53 @@ def load_tracab(filename, length):
         track[:,[4,5]] = track[:,[5,4]]
         yield track
 
+def interpolate_tracab(tracks):
+    # sort by player id and frame id
+    df = pd.DataFrame(tracks)
+    df.columns = ['frame_id', 'jersey_number', 'x', 'y', 'team_id', 'player_id']
+    df = df.sort_values(by=['player_id', 'frame_id']).reset_index()
+    
+    grouped = df.groupby('player_id')
+    interpolated_rows = []
+    interp_frames = np.linspace(1, 250, 550)
+    for player, group in grouped:
+        print("interpolate for player %d" %player)
+        record = group.values[:,1:]
+        in_frames = np.where((interp_frames >= record[0,0]) & (interp_frames <= record[-1,0]))[0]
+        group_interp = np.tile(record[0], (in_frames.shape[0],1))
+        frames = record[:,0]
+        fx = interpolate.interp1d(frames, record[:,2])
+        fy = interpolate.interp1d(frames, record[:,3])
+        group_interp[:,0] = in_frames + 1
+        group_interp[:,2] = fx(interp_frames[in_frames])
+        group_interp[:,3] = fy(interp_frames[in_frames])
+        print(record.shape[0], group_interp.shape[0])
+
+        interpolated_rows.append(group_interp)
+        
+
+    # # interpolate every two consecutive consecutive frames
+    # for index, row in df.iterrows():
+    #     new_row = row
+    #     if index == df.index[-1]:
+    #         break
+    #     next_row = df.iloc[index+1]
+    #     # print(df.loc[index], df.iloc[index])
+    #     if row['player_id'] != next_row['player_id']:
+    #         continue
+    #     print(row['frame_id'],next_row['frame_id'])
+    #     new_row['frame_id'] = (row['frame_id'] + next_row['frame_id'])/2
+    #     new_row['x'] = (row['x'] + next_row['x'])/2
+    #     new_row['y'] = (row['y'] + next_row['y'])/2
+    #     # print(new_row)
+    #     # input("...")
+    #     interpolated_rows.append(new_row.values[1:])
+    interpolated_tracks = np.vstack(interpolated_rows)
+    print(interpolated_tracks[:5])
+    # print(df.values[:5,1:].shape)
+    # interpolated_tracks = np.vstack([df.values[:,1:],interpolated_rows])
+    # print(interpolated_tracks[-5:])
+    return interpolated_tracks
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -91,3 +139,6 @@ if __name__ == "__main__":
     tracks_on_pitch = tracks[:,[0,3,4,6,1,2]]
     print(tracks_on_pitch)
     np.savetxt(os.path.join(os.path.dirname(args.gt_path),'gt_pitch.txt'),tracks_on_pitch,delimiter=',')
+
+    gt_interp = interpolate_tracab(tracks_on_pitch)
+    np.savetxt(os.path.join(os.path.dirname(args.gt_path),'gt_pitch_550.txt'),gt_interp,delimiter=',')

@@ -1,4 +1,7 @@
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
+from matplotlib import cm
 import cv2
 import numpy as np
 import os
@@ -174,7 +177,7 @@ def backproject_pitch(P, x, C_cam):
     p = np.dot(X.T, plane_normal) * C_homo - np.dot(C_homo.T, plane_normal) * X
 
     p /= p[-1]
-    return p
+    return p.ravel()
 
 
 def display_soccer_pitch_ground(points, imgname, C_cam):
@@ -192,8 +195,56 @@ def display_soccer_pitch_ground(points, imgname, C_cam):
         plt.scatter(p[0], p[1])
         plt.annotate(p[2], (p[0], p[1]))
 
-    # plt.show()
     plt.savefig(imgname)
+    plt.show()
+
+def display_cameras_on_pitch(bboxs, cams, keys, imgname):
+    fig, ax = plt.subplots(1,1,figsize=(16, 9))
+
+    for pts in pitch:
+        pts[[1, 2]] = pts[[2, 1]]
+        px, py = pts[0], pts[2]
+        plt.plot(SCALE * px, SCALE * py, 'r-')
+    
+    patches = []
+    # colors = iter([plt.cm.Paired(i) for i in range(len(cams))])
+    colors = []
+    for bbox, cam, key in zip(bboxs, cams, keys):
+        # clr = next(colors)
+        
+        if int(key) % 4 == 0:
+            clr = 'red'
+        elif int(key) % 4 == 1:
+            clr = 'gray'
+        elif int(key) % 4 == 2:
+            clr = 'red'
+        else:
+            clr = 'gray'
+        plt.scatter(cam[0], cam[1], c=clr)
+        plt.annotate('Camera '+key, (cam[0], cam[1]))
+
+        # plot the lines
+        for coord in bbox:
+            # line = np.vstack([cam, coord])
+            plt.plot([cam[0], coord[0]], [cam[1], coord[1]], color=clr, linestyle=':', alpha=0.8)
+
+        # plot field of view
+        polygon = Polygon(bbox, True)
+        patches.append(polygon)
+        colors.append(clr)
+    
+    # p = PatchCollection(patches, alpha=0.4, cmap=plt.cm.Paired)
+    # p.set_array(np.arange(len(cams)))
+    p = PatchCollection(patches, alpha=0.1, color='gray')
+    # p.set_array(np.arange(len(cams)))
+    ax.add_collection(p)
+    p.set_color(colors)
+    p.set_alpha(list(map(lambda x: 0.2 if x == 'gray' else 0.1, colors)))
+    ax.set_xbound(-85, 85)
+    ax.set_ybound(-60,60)
+
+    plt.savefig(imgname)
+    plt.show()
 
 
 def visualize_tracks_on_pitch(tracks):
@@ -246,8 +297,15 @@ if __name__ == "__main__":
     opt = a.parse_args()
 
     img = cv2.imread(
-        "/scratch2/wuti/Others/3DVision/0125-0135/ULSAN HYUNDAI FC vs AL DUHAIL SC 16m RIGHT/img/image0001.jpg"
+        "/scratch2/wuti/Others/3DVision/fixed_cameras/FIXED-0125-0135/cam1_img/image0001.png"
     )
+
+    H, W, _ = img.shape
+    print(W, H)
+
+    corners = [[0, 0, 1], [0, H, 1], [W, H, 1], [W, 0, 1]]
+    # cam_list = ["1","2","3","4","5","6","7","8"]
+    cam_list = ["2","5","6"]
 
     # result_file = '/scratch2/wuti/Others/3DVision/test_result_filtered_team/16m_right_filtered_team.txt'
     result_file = opt.res_path
@@ -325,9 +383,35 @@ if __name__ == "__main__":
         else:
             tracks_pitch.append([track[0], track[1], tx, ty])
     
+    # print(points)
     # display_soccer_pitch_ground(points, 'test.png', C_cam)
 
     np.savetxt(outname, np.array(tracks_pitch), delimiter=',')
+
+    if calib_file.endswith('.json'):
+        # visualize cameras
+        if opt.viz:
+            cams = []
+            bboxs = []
+            keys = []
+            for key, calib_cam in calib.items():
+                if key not in cam_list:
+                    continue
+                # print(key)
+                keys.append(key)
+                K = np.array(calib_cam["K"]).reshape(3,3)
+                R = np.array(calib_cam["R"]).reshape(3,3)
+                T = np.array(calib_cam["T"]).reshape(3,1)
+                P = K @ np.hstack([R, T])
+                cam = -R.T.dot(T).ravel()
+                cams.append(cam)
+                bbox = []
+                for corner in corners:
+                    tx, ty, tz, _ = backproject_pitch(P,np.array(corner).reshape(-1,1),cam)
+                    bbox.append([tx, ty])
+                bboxs.append(np.array(bbox))
+
+            display_cameras_on_pitch(bboxs, cams, keys, 'fixed_cameras_on_pitch_256.png')
 
     # # visualize tracking result
     # # result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered_team/cam1_right_team.txt'

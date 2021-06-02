@@ -105,7 +105,7 @@ pitch = [
 ]
 
 
-def visualize_tracks_on_pitch(tracks, gt=None):
+def visualize_tracks_on_pitch(tracks, gt=None, invert=False):
     W, H = int(WIDTH // RESOLUTION), int(HEIGHT // RESOLUTION)
     cx, cz = WIDTH / 2, HEIGHT / 2
 
@@ -144,20 +144,34 @@ def visualize_tracks_on_pitch(tracks, gt=None):
             cv2.polylines(img, pitch_lines, False, (255, 255, 255), 3)
 
         for track in tracks_cur:
-            _, track_id, x, z, teamid, objid = track
+            # _, track_id, x, z, teamid, objid = track
+            _, track_id, x, z = track
+            if invert:
+                x = -x
 
             # draw individual points with id
+            # cv2.putText(img,
+            #             str(int(track_id)) + '(' + str(int(objid)) + ')', (int(
+            #                 (x + cx) // RESOLUTION), int(
+            #                     (z + cz) // RESOLUTION) - 8),
+            #             cv2.FONT_HERSHEY_PLAIN, 2,
+            #             team_color_list[int(teamid)], 2)
             cv2.putText(img,
-                        str(int(track_id)) + '(' + str(int(objid)) + ')', (int(
+                        str(int(track_id)), (int(
                             (x + cx) // RESOLUTION), int(
                                 (z + cz) // RESOLUTION) - 8),
                         cv2.FONT_HERSHEY_PLAIN, 2,
-                        team_color_list[int(teamid)], 2)
+                        color_list[int(track_id)%len(color_list)], 2)
 
+            # cv2.circle(img, (int(
+            #     (x + cx) // RESOLUTION), int((z + cz) // RESOLUTION)),
+            #            radius=10,
+            #            color=team_color_list[int(teamid)],
+            #            thickness=-1)
             cv2.circle(img, (int(
                 (x + cx) // RESOLUTION), int((z + cz) // RESOLUTION)),
                        radius=10,
-                       color=team_color_list[int(teamid)],
+                       color=color_list[int(track_id)%len(color_list)],
                        thickness=-1)
 
         out = None
@@ -168,12 +182,13 @@ def visualize_tracks_on_pitch(tracks, gt=None):
             if gt_frame.shape[0] > 0:
                 overlay = np.zeros((H, W, 3), np.uint8)
                 for pl in gt_frame:
+                    
                     # frame_id, jersey_number, X, Z, team_id, player_id
                     cv2.circle(overlay, (int((pl[2] + cx) // RESOLUTION),
-                                         int((pl[3] + cz) // RESOLUTION)),
-                               radius=30,
-                               color=team_color_list[int(pl[4])],
-                               thickness=-1)
+                                        int((pl[3] + cz) // RESOLUTION)),
+                            radius=30,
+                            color=team_color_list[int(pl[4])],
+                            thickness=-1)
                 # blend ground truth overlay with the pitch
                 out = cv2.addWeighted(img, 1.0, overlay, 0.5, 1)
         # prev_frame = frame
@@ -194,7 +209,7 @@ def convert_to_footyviz(tracks):
     df['team'] = 'others'
     # print(df.columns)
     df.team[df.teamid == 0] = 'defense'
-    df.team[df.teamid == 1] = 'attach'
+    df.team[df.teamid == 1] = 'attack'
     df.team[df.teamid == 2] = 'referee'
     df['bgcolor'] = 'black'
     df['edgecolor'] = 'black'
@@ -244,6 +259,7 @@ if __name__ == '__main__':
                    type=str,
                    help="path to the ground truth tracks",
                    default=None)
+    a.add_argument("--fixed_cam", action='store_true', help="Whehter is fixed camera or not")
 
     opt = a.parse_args()
 
@@ -272,16 +288,16 @@ if __name__ == '__main__':
         (int(WIDTH // RESOLUTION), int(HEIGHT // RESOLUTION)))
 
     # visualize tracking results together with ground truth
-    visualize_tracks_on_pitch(track_res, gt)
+    visualize_tracks_on_pitch(track_res, gt, opt.fixed_cam)
 
-    # visualize basic result with footyviz
-    df = convert_to_footyviz(track_res)
-    # print(df.loc[0])
-    # input("...")
-    # fig, ax, dfFrame = footyviz.draw_frame(df, t=0.1, fps=25)
-    # fig, ax, dfFrame = footyviz.add_voronoi_to_fig(fig, ax, dfFrame)
+    # # visualize basic result with footyviz
+    # df = convert_to_footyviz(track_res)
+    # # print(df.loc[0])
+    # # input("...")
+    # # fig, ax, dfFrame = footyviz.draw_frame(df, t=0.1, fps=25)
+    # # fig, ax, dfFrame = footyviz.add_voronoi_to_fig(fig, ax, dfFrame)
 
-    # plt.show()
-    clip = make_animation(df, voronoi=True)
-    clip.ipython_display()
-    clip.write_videofile(output_file.replace('.', '_voronoi.'))
+    # # plt.show()
+    # clip = make_animation(df, voronoi=True)
+    # clip.ipython_display()
+    # clip.write_videofile(output_file.replace('.', '_voronoi.'))
