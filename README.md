@@ -6,6 +6,10 @@ This repo contains a full pipeline to support 3D position tracking of soccer pla
 - In multi-camera tracking stage, 2D positions are projected into 3D positions. Then across-camera association is achieved as an optimization problem with spatial, temporal and visual constraints.
 - In the end, visualization in 2D, 3D and a voronoi visualization for sports coaching purpose are provided.
 
+3D Tracking            |  Sports Coaching 
+:-------------------------:|:-------------------------:
+<img alt="demo" src="https://github.com/SherryJYC/3D-Tracking-MVS/blob/main/misc/cam1_right_team.gif" width="400" height="250" />  |  <img alt="demo" src="https://github.com/SherryJYC/3D-Tracking-MVS/blob/main/misc/cam1_right_team_gt_voronoi.gif" width="400" height="250" />
+
 
 
 ## Preprocessing 
