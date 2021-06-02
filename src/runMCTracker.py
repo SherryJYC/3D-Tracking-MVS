@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu May 2 16:43:40 2021
-
 @author: yujiang
 """
 
 """
 combine two cameras from tracking result <frame id, obj id, x, z>
-
 execution file
-
 """
 import argparse
 import os
