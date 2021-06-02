@@ -107,9 +107,11 @@ python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_
 
 # 3d
 python src/utils/eval3d.py --pred=output/pitch/EPTS_3_pitch.txt_EPTS_4_pitch.txt.txt --fixcam  --gt=data/fixedcam/gt_pitch_550.txt
+python src/utils/eval3d.py --fixcam --boxplot
 
 ```
 
+<!--
 ## Result
 
 > 0125-0135 right moving camera
@@ -133,11 +135,14 @@ CAM1    49.3% 39.4% 65.9% 69.4% 41.5% 22  6 15  1 2871  899  17  146 -29.0% 0.34
 OVERALL 63.7% 56.7% 72.6% 80.5% 63.0% 47 25 21  1 4247 1747  38  359  32.7% 0.328  17  22   1
 
 ```
+-->
 
 ## Acknowledgement
 We would like to thank the following Github repos or softwares: <br/>
-- [Supervisely]()
-- [Tracktor++]()
+- [Supervisely](https://app.supervise.ly/init)
+- [Tracktor++](https://github.com/phil-bergmann/tracking_wo_bnw)
+- [IoU tracker](https://github.com/GBJim/iou_tracker)
+- [SORT](https://github.com/abewley/sort)
 
 
 
