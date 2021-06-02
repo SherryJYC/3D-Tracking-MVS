@@ -155,6 +155,7 @@ We would like to thank the following Github repos or softwares: <br/>
 - [IoU tracker](https://github.com/GBJim/iou_tracker)
 - [SORT](https://github.com/abewley/sort)
 - [Foot crunching (footyviz)](https://medium.com/football-crunching)
+- [Pymotmetrics](https://github.com/cheind/py-motmetrics)
 
 ## Authors
 Yuchang Jiang, Tianyu Wu, Ying Jiao, Yelan Tao
