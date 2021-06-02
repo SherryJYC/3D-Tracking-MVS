@@ -1,9 +1,12 @@
 # 3D-Tracking-MVS
-Project for 3DV 2021 Spring @ ETH Zurich <br/>
+Project for 3DV 2021 Spring @ ETH Zurich [[Report Link]()] <br/>
+<br/>
 This repo contains a full pipeline to support 3D position tracking of soccer players, with multi-view calibrated moving/fixed video sequences as inputs. 
 - In single-camera tracking stage, Tracktor++ is used to get 2D positions
 - In multi-camera tracking stage, 2D positions are projected into 3D positions. Then across-camera association is achieved as an optimization problem with spatial, temporal and visual constraints.
 - In the end, visualization in 2D, 3D and a voronoi visualization for sports coaching purpose are provided.
+
+
 
 ## Preprocessing 
 - Split video into image frames
@@ -11,10 +14,12 @@ This repo contains a full pipeline to support 3D position tracking of soccer pla
 python src/utils/v2img.py --pathIn=data/0125-0135/CAM1/CAM1.mp4 --pathOut=data/0125-0135/CAM1/img --splitnum=1
 ```
 - Estimate football pitch homography (size 120m * 90m [ref](https://www.quora.com/What-are-the-official-dimensions-of-a-soccer-field-in-the-FIFA-World-Cup))
+> [FIFA official document](https://img.fifa.com/image/upload/datdz0pms85gbnqy4j3k.pdf)
+
 ```
 python src/utils/computeHomo.py --img=data/0125-0135/RIGHT/img/image0000.jpg --out_dir=data/0125-0135/RIGHT/
 ```
-[FIFA official document](https://img.fifa.com/image/upload/datdz0pms85gbnqy4j3k.pdf)
+
 - Handle moving cameras
 ```
 python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/CAM1/calib.txt --img_dir=data/0125-0135/CAM1/img --output_dir=data/0125-0135/CAM1/img_static
@@ -23,9 +28,8 @@ python src/utils/mov2static.py --calib_file=data/calibration_results/0125-0135/C
 ```
 python src/utils/json2txt.py --jsonfile=data/0125-0135/0125-0135.json
 ```
-- Backproject to ground plane
 
-Equation to find the intersection of a line with a plane ([ref](https://math.stackexchange.com/questions/2041296/algorithm-for-line-in-plane-intersection-in-3d))
+<!--
 - After processing, data folder structure should be like:
 ```
 data
@@ -46,6 +50,7 @@ data
         ├── CAM1
         └── RIGHT
 ```
+-->
 - [Download preprocessed data](https://polybox.ethz.ch/index.php/s/CvcT5pxOY90bpIF)
 > only include homography and config files, large image folder not included
 
@@ -63,6 +68,8 @@ Jiao Ying ???
 Jiao Ying ???
 ```
 - Convert tracking results to coordinates on the pitch
+> Equation to find the intersection of a line with a plane ([ref](https://math.stackexchange.com/questions/2041296/algorithm-for-line-in-plane-intersection-in-3d))
+
 ```
 python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --xymode --reid
 ```
@@ -76,7 +83,7 @@ python src/runMCTRacker.py
 python src/runMCTRacker.py --doreid
 ```
 
-- Run multi-cam tracker (e.g. 4 cams)
+- Run multi-cam tracker (e.g. 8 cams)
 ```
 python src/runTreeMCTracker.py 
 ```
@@ -94,19 +101,20 @@ python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=o
 # if 3d mode
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/RIGHT.txt --calib_file=data/calibration_results/0125-0135/RIGHT/calib.txt  --pitchmode
 ```
-> visualize 3d position on the pitch
-- visualize tracking result with ground truth and voronoi (with footyviz)
+> visualize 3d tracking result with ground truth and voronoi diagram
+
 ```
 python src/visualize_on_pitch.py --result_file=PATH_TO_TRACKING_RESULT --ground_truth=PATH_TO_GROUND_TRUTH
 ```
-- visualize ground truth on camera frames
+> visualize 3d ground truth on camera frames (reprojection)
+
 ```
 python src/visualize_tracab --img_path=PATH_TO_IMAGES --calib_path=PATH_TO_CALIB --gt_path=PATH_TO_TRACAB_GT --output_path=PATH_TO_OUTPUT_VIDEO
 ```
 - Produce quantitative result
 
 ```
-# 2d <fid, objid, x, y, w, h, .., ...>
+# 2d <frame id, objid, x, y, w, h, .., ...>
 python src/motmetrics/apps/eval_motchallenge.py data/0125-0135/ output/tracktor_filtered
 
 # 3d
@@ -146,9 +154,12 @@ We would like to thank the following Github repos or softwares: <br/>
 - [Tracktor++](https://github.com/phil-bergmann/tracking_wo_bnw)
 - [IoU tracker](https://github.com/GBJim/iou_tracker)
 - [SORT](https://github.com/abewley/sort)
+- [Foot crunching (footyviz)](https://medium.com/football-crunching)
 
+## Authors
+Yuchang Jiang, Tianyu Wu, Ying Jiao, Yelan Tao
 
-
+<!--
 ## Useful literature
 
 - Learning to Track and Identify Players from Broadcast Sports Videos 2012 :rainbow:[[paper](https://www.cs.ubc.ca/~murphyk/Papers/weilwun-pami12.pdf)]
@@ -159,3 +170,4 @@ We would like to thank the following Github repos or softwares: <br/>
 [Full pipeline: POM+DeepOcculusion+pyKSP](https://www.epfl.ch/labs/cvlab/research/research-surv/research-body-surv-index-php/) <br/>
 [Soccer player tracking system](https://github.com/AndresGalaviz/Football-Player-Tracking) <br/>
 [CVPR2020: How To Train Your Deep Multi-Object Tracker](https://github.com/yihongXU/deepMOT)
+-->
