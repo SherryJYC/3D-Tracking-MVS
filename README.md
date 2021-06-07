@@ -89,7 +89,7 @@ python src/runMCTRacker.py --doreid
 
 - Run multi-cam tracker (e.g. 8 cams)
 ```
-python src/runTreeMCTracker.py 
+python src/runTreeMCTracker.py --doreid
 ```
 
 ## Evaluation
