@@ -45,9 +45,11 @@ class Tracker:
         self.im_index = 0
         self.results = {}
 
-        # read calibration results
-        self.calib = np.genfromtxt(tracker_cfg['calib_path'],delimiter=',',usecols=(1,2,3,4,5,6))
-        self.img_names = np.genfromtxt(tracker_cfg['calib_path'],delimiter=',',usecols=(7), dtype=str)
+
+        if self.do_align:
+            # read calibration results
+            self.calib = np.genfromtxt(tracker_cfg['calib_path'],delimiter=',',usecols=(1,2,3,4,5,6))
+            self.img_names = np.genfromtxt(tracker_cfg['calib_path'],delimiter=',',usecols=(7), dtype=str)
 
     def reset(self, hard=True):
         self.tracks = []
@@ -205,17 +207,20 @@ class Tracker:
         if self.im_index > 0:
 
             # get img path
-            base_dir = os.path.dirname(blob['img_path'])
-            img_name = os.path.basename(blob['img_path']).split('.')[0]
+            #print(blob['img_path'])
+            base_dir = os.path.dirname(blob['img_path'][0])
+            img_name = os.path.basename(blob['img_path'][0]).split('.')[0]
             frame_index = int(img_name[5:])
             last_img_name = os.path.join(base_dir, 'image'+ str(frame_index-1).zfill(4)+'.png')
+
+            #print(blob['img'][0].shape)
             
-            HEIGHT, WIDTH = blob['img'][0].shape
+            HEIGHT, WIDTH, _ = blob['img'][0].shape
             cx,cy = WIDTH/2., HEIGHT/2.
 
             # check if both img paths exist in cali text
-            calib_id = np.where(img_names == img_name)[0]
-            last_calib_id = np.where(img_names == last_img_name)[0]
+            calib_id = np.where(self.img_names == img_name)[0]
+            last_calib_id = np.where(self.img_names == last_img_name)[0]
 
             if len(calib_id) > 0 and len(last_calib_id) > 0:
                 # if so, construct warp_matrix
@@ -223,7 +228,7 @@ class Tracker:
                 P1 = computeP(calib[calib_id[0]], cx, cy)
                 # compute homography
                 warp_matrix = np.dot(P1, np.linalg.pinv(P))[:2,:]
-            else
+            else:
                 # compute warp matrix from the two images
                 im1 = np.transpose(self.last_image.cpu().numpy(), (1, 2, 0))
                 im2 = np.transpose(blob['img'][0].cpu().numpy(), (1, 2, 0))
