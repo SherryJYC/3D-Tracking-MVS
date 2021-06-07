@@ -146,7 +146,7 @@ def add_voronoi_to_fig(fig, ax, dfFrame, hide=True):
     polygons = {}
     dfFrame_team = dfFrame
     if hide:
-        dfFrame_team = dfFrame_team.loc[dfFrame['team'].isin(['attach','defense'])]
+        dfFrame_team = dfFrame_team.loc[dfFrame['team'].isin(['attack','defense'])]
     vor, dfVor = calculate_voronoi(dfFrame_team)
     for index, region in enumerate(vor.regions):
         if not -1 in region:

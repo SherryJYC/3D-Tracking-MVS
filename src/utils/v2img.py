@@ -38,5 +38,5 @@ if __name__=="__main__":
     args = a.parse_args()
     print(args)
     if not os.path.exists(args.pathOut):
-        os.mkdir(args.pathOut)
+        os.makedirs(args.pathOut, exist_ok=False)
     extractImages(args.pathIn, args.pathOut, args.splitnum)

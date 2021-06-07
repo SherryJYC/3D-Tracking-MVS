@@ -302,7 +302,7 @@ if __name__ == "__main__":
     )
 
     H, W, _ = img.shape
-    print(W, H)
+    # print(W, H)
 
     corners = [[0, 0, 1], [0, H, 1], [W, H, 1], [W, 0, 1]]
     cam_list = ["1","2","3","4","5","6","7","8"]
@@ -339,7 +339,7 @@ if __name__ == "__main__":
         T = np.array(calib[imgname]["T"]).reshape(3,1)
         P = K @ np.hstack([R, T])
         C_cam = -R.T.dot(T).ravel()
-        print(C_cam)
+        # print(C_cam)
         plane = np.array([0, 0, 1])
         # input("....")
     else:
@@ -351,7 +351,7 @@ if __name__ == "__main__":
         # print(imgname)
         cx, cy = 960, 540
         Projections = [computeP(calibline, cx, cy) for calibline in calib]
-        print(len(Projections), len(calib))
+        # print(len(Projections), len(calib))
         plane = np.array([0, 1, 0])
 
     plane_normal = point_normal_eq(plane, origin)
@@ -415,7 +415,7 @@ if __name__ == "__main__":
                     bbox.append([tx, ty])
                 bboxs.append(np.array(bbox))
 
-            display_cameras_on_pitch(bboxs, cams, keys, 'fixed_cameras_on_pitch.png')
+            display_cameras_on_pitch(bboxs, cams, keys, os.path.join(os.path.dirname(outname),'fixed_cameras_on_pitch.png'))
 
     # # visualize tracking result
     # # result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered_team/cam1_right_team.txt'

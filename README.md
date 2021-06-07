@@ -10,7 +10,16 @@ This repo contains a full pipeline to support 3D position tracking of soccer pla
 :-------------------------:|:-------------------------:
 <img alt="demo" src="https://github.com/SherryJYC/3D-Tracking-MVS/blob/main/misc/cam1_right_team.gif" width="400" height="250" />  |  <img alt="demo" src="https://github.com/SherryJYC/3D-Tracking-MVS/blob/main/misc/cam1_right_team_gt_voronoi.gif" width="400" height="250" />
 
-
+## Demo
+To run the demos, please download the required data from [this link](https://polybox.ethz.ch/index.php/s/SrBn2DtKEJQaWFg) and place the folder inside this repository
+- Run the demo visualization on the moving cameras
+```shell
+bash script/demo_moving.sh
+```
+- Run the demo visualization on the fixed cameras
+```shell
+bash script/demo_fix.sh
+```
 
 ## Preprocessing 
 - Split video into image frames
@@ -113,12 +122,12 @@ python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=o
 > visualize 3d tracking result with ground truth and voronoi diagram
 
 ```
-python src/visualize_on_pitch.py --result_file=PATH_TO_TRACKING_RESULT --ground_truth=PATH_TO_GROUND_TRUTH
+python src/utils/visualize_on_pitch.py --result_file=PATH_TO_TRACKING_RESULT --ground_truth=PATH_TO_GROUND_TRUTH
 ```
 > visualize 3d ground truth on camera frames (reprojection)
 
 ```
-python src/visualize_tracab --img_path=PATH_TO_IMAGES --calib_path=PATH_TO_CALIB --gt_path=PATH_TO_TRACAB_GT --output_path=PATH_TO_OUTPUT_VIDEO
+python src/utils/visualize_tracab --img_path=PATH_TO_IMAGES --calib_path=PATH_TO_CALIB --gt_path=PATH_TO_TRACAB_GT --output_path=PATH_TO_OUTPUT_VIDEO
 ```
 - Produce quantitative result
 

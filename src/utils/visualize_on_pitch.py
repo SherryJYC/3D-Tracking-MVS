@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import argparse
 import pandas as pd
+import os
 import footyviz
 
 from moviepy import editor as mpy
@@ -144,36 +145,25 @@ def visualize_tracks_on_pitch(tracks, gt=None, invert=False):
             cv2.polylines(img, pitch_lines, False, (255, 255, 255), 3)
 
         for track in tracks_cur:
-            # _, track_id, x, z, teamid, objid = track
-            _, track_id, x, z = track
+            _, track_id, x, z, teamid, objid = track
             if invert:
                 x = -x
 
             # draw individual points with id
-            # cv2.putText(img,
-            #             str(int(track_id)) + '(' + str(int(objid)) + ')', (int(
-            #                 (x + cx) // RESOLUTION), int(
-            #                     (z + cz) // RESOLUTION) - 8),
-            #             cv2.FONT_HERSHEY_PLAIN, 2,
-            #             team_color_list[int(teamid)], 2)
             cv2.putText(img,
-                        str(int(track_id)), (int(
+                        str(int(track_id)) + '(' + str(int(objid)) + ')', (int(
                             (x + cx) // RESOLUTION), int(
                                 (z + cz) // RESOLUTION) - 8),
                         cv2.FONT_HERSHEY_PLAIN, 2,
-                        color_list[int(track_id)%len(color_list)], 2)
+                        team_color_list[int(teamid)], 2)
+            
 
-            # cv2.circle(img, (int(
-            #     (x + cx) // RESOLUTION), int((z + cz) // RESOLUTION)),
-            #            radius=10,
-            #            color=team_color_list[int(teamid)],
-            #            thickness=-1)
             cv2.circle(img, (int(
                 (x + cx) // RESOLUTION), int((z + cz) // RESOLUTION)),
-                       radius=10,
-                       color=color_list[int(track_id)%len(color_list)],
-                       thickness=-1)
-
+                    radius=10,
+                    color=team_color_list[int(teamid)],
+                    thickness=-1)
+                
         out = None
         # draw ground truth
         if gt is not None:
@@ -201,6 +191,7 @@ def convert_to_footyviz(tracks):
     # frames_missing = frames[~np.isin(frames, tracks[:,0])]
     df = pd.DataFrame(tracks)
     df.columns = ['frame', 'player', 'x', 'y', 'teamid', 'objid']
+    # print(df.columns)
     df = df.set_index('frame')
     # print(len(df.index.tolist()))
     # df = df.reindex(df.index.tolist() + list(frames_missing))
@@ -222,10 +213,10 @@ def convert_to_footyviz(tracks):
     df['player_num'] = np.NaN
     df['z'] = 0
 
-    print(df['team'])
-    print(df.head())
-    print(df['x'].max(axis=0), df['x'].min(axis=0))
-    print(df['y'].max(axis=0), df['y'].min(axis=0))
+    # print(df['team'])
+    # print(df.head())
+    # print(df['x'].max(axis=0), df['x'].min(axis=0))
+    # print(df['y'].max(axis=0), df['y'].min(axis=0))
     return df
 
 
@@ -260,10 +251,10 @@ if __name__ == '__main__':
                    help="path to the ground truth tracks",
                    default=None)
     a.add_argument("--fixed_cam", action='store_true', help="Whehter is fixed camera or not")
-
+    a.add_argument("--viz", action='store_true', help="Whether to visualize the sport analysis or not")
     opt = a.parse_args()
 
-    output_file = opt.result_file.replace('.txt', '.mp4')
+    output_file = os.path.splitext(opt.result_file)[0]+'.mp4'
     track_res = np.genfromtxt(opt.result_file, delimiter=',')
     print(track_res.shape)
     frames = np.unique(track_res[:, 0])
@@ -280,8 +271,8 @@ if __name__ == '__main__':
     gt = None
     if opt.ground_truth:
         gt = np.genfromtxt(opt.ground_truth, delimiter=',')
-        output_file = output_file.replace('.', '_gt.')
-        print(gt.shape)
+        output_file = os.path.splitext(output_file)[0]+'_gt.mp4'
+        # print(gt.shape)
 
     videoWriter = cv2.VideoWriter(
         output_file, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), FPS,
@@ -290,14 +281,18 @@ if __name__ == '__main__':
     # visualize tracking results together with ground truth
     visualize_tracks_on_pitch(track_res, gt, opt.fixed_cam)
 
-    # # visualize basic result with footyviz
-    # df = convert_to_footyviz(track_res)
-    # # print(df.loc[0])
-    # # input("...")
-    # # fig, ax, dfFrame = footyviz.draw_frame(df, t=0.1, fps=25)
-    # # fig, ax, dfFrame = footyviz.add_voronoi_to_fig(fig, ax, dfFrame)
-
-    # # plt.show()
-    # clip = make_animation(df, voronoi=True)
-    # clip.ipython_display()
-    # clip.write_videofile(output_file.replace('.', '_voronoi.'))
+    if opt.viz:
+        # visualize basic result with footyviz
+        print("visualize sport analysis with voronoi")
+        if opt.fixed_cam:
+            # invert x direction
+            track_res[:,2] = -track_res[:,2]
+        df = convert_to_footyviz(track_res)
+        # print(df.loc[0])
+        # input("...")
+        # fig, ax, dfFrame = footyviz.draw_frame(df, t=0.1, fps=25)
+        # fig, ax, dfFrame = footyviz.add_voronoi_to_fig(fig, ax, dfFrame)
+        # plt.show()
+        clip = make_animation(df, voronoi=True)
+        clip.ipython_display()
+        clip.write_videofile(os.path.splitext(output_file)[0]+'_voronoi.mp4')
