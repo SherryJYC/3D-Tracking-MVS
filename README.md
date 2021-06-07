@@ -68,17 +68,17 @@ data
 > only include homography and config files, large image folder not included
 -->
 ## Single-camera tracking
-- Train Faster RCNN
+- Object Detector: frcnn_fpn
+Train object detector and generate detection results with [this](https://colab.research.google.com/drive/18CI160namP1-sF82H6sgrDycvHZ1PbPm?usp=sharing) Google Colab notebook. The trained model can be downloaded through [this link](https://polybox.ethz.ch/index.php/s/SrBn2DtKEJQaWFg?path=%2Ftrained_frcnn_fpn).
+- Run Tracktor++
+Put trainded object detector ```model_epoch_50.model``` into  ```src/tracking_wo_bnw/output/faster_rcnn_fpn_training_soccer/```. Put data and calibration results into ```src/tracking_wo_bnw/```. 
 ```
-Jiao Ying ???
-```
-- Run Tracktor
-```
-Jiao Ying ???
+cd src/tracking_wo_bnw
+python experiments/scripts/test_tracktor.py
 ```
 - Run ReID(team id) model
 ```
-Jiao Ying ???
+python src/team_classification/team_svm.py PATH_TO_TRACKING_RESULT PATH_TO_IMAGES
 ```
 - Convert tracking results to coordinates on the pitch
 > Equation to find the intersection of a line with a plane ([ref](https://math.stackexchange.com/questions/2041296/algorithm-for-line-in-plane-intersection-in-3d))
