@@ -63,10 +63,10 @@ data
         ├── CAM1
         └── RIGHT
 ```
--->
+
 - [Download preprocessed data](https://polybox.ethz.ch/index.php/s/CvcT5pxOY90bpIF)
 > only include homography and config files, large image folder not included
-
+-->
 ## Single-camera tracking
 - Train Faster RCNN
 ```
