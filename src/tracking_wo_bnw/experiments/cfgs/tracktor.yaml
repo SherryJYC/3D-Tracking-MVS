@@ -1,6 +1,6 @@
 name: Tracktor++
 # Subfolder name in output/tracker/
-module_name: MOT17
+module_name: soccer
 desription:
 seed: 12345
 # frcnn or fpn
@@ -11,7 +11,8 @@ network: fpn
 # obj_detect_config: output/frcnn/res101/mot_2017_train/180k/sacred_config.yaml
 
 # fpn
-obj_detect_models: output/faster_rcnn_fpn/faster_rcnn_fpn_training_mot_17/model_epoch_27.model
+#obj_detect_models: output/faster_rcnn_fpn/faster_rcnn_fpn_training_mot_17/model_epoch_27.model
+obj_detect_models: output/faster_rcnn_fpn_training_soccer/model_epoch_50.model
 # obj_detect_model: output/faster_rcnn_fpn/faster_rcnn_fpn_training_mot_20/model_epoch_27.model
 
 reid_models: output/tracktor/reid/res50-mot17-batch_hard/ResNet_iter_25245.pth
@@ -48,7 +49,8 @@ tracker:
   # 0 tells the tracker to use private detections (Faster R-CNN)
   public_detections: True
   # Do camera motion compensation
-  do_align: True
+  #do_align: True
+  do_align: False
   # Which warp mode to use (MOTION_EUCLIDEAN, MOTION_AFFINE, ...)
   warp_mode: MOTION_EUCLIDEAN
   # maximal number of iterations (original 50)
@@ -66,6 +68,7 @@ tracker:
   # How much IoU do track and image need to be considered for matching
   reid_iou_threshold: 0.2
   # Specify the path to calibration text
-  calib_path: '/calibration_results/0125_0135/CAM1/calib.txt'
+  #calib_path: '/calibration_results/0125_0135/CAM1/calib.txt'
+  #calib_path: 'calibration_results/0125_0135/RIGHT/calib.txt'
 
 oracle: null
