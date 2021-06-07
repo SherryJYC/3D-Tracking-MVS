@@ -49,8 +49,7 @@ tracker:
   # 0 tells the tracker to use private detections (Faster R-CNN)
   public_detections: True
   # Do camera motion compensation
-  #do_align: True
-  do_align: False
+  do_align: True
   # Which warp mode to use (MOTION_EUCLIDEAN, MOTION_AFFINE, ...)
   warp_mode: MOTION_EUCLIDEAN
   # maximal number of iterations (original 50)
@@ -68,7 +67,7 @@ tracker:
   # How much IoU do track and image need to be considered for matching
   reid_iou_threshold: 0.2
   # Specify the path to calibration text
-  #calib_path: '/calibration_results/0125_0135/CAM1/calib.txt'
-  #calib_path: 'calibration_results/0125_0135/RIGHT/calib.txt'
+  calib_path: '/calibration_results/0125_0135/CAM1/calib.txt'
+  calib_path: 'calibration_results/0125_0135/RIGHT/calib.txt'
 
 oracle: null
