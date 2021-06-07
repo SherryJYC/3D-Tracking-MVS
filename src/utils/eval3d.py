@@ -26,14 +26,24 @@ def config():
     a.add_argument("--pred", help="track result of cam", default='data/tracks/fixcam/results/results/EPTS_1_pitch.txt_EPTS_2_pitch.txt.txt_EPTS_3_pitch.txt_EPTS_4_pitch.txt.txt.txt')
     a.add_argument("--gt", help="ground truth", default='data/fixedcam/gt_pitch_550.txt')
 
+    # 12345678
     a.add_argument("--predlist", nargs="+", default=[
-        'data/tracks/fixcam/results/EPTS_1_pitch.txt_EPTS_2_pitch.txt.txt',
-    'data/tracks/fixcam/results/EPTS_3_pitch.txt_EPTS_4_pitch.txt.txt', 
-    'data/tracks/fixcam/results/EPTS_5_pitch.txt_EPTS_6_pitch.txt.txt', 
-    'data/tracks/fixcam/results/EPTS_7_pitch.txt_EPTS_8_pitch.txt.txt',
-    'data/tracks/fixcam/results/results/EPTS_1_pitch.txt_EPTS_2_pitch.txt.txt_EPTS_3_pitch.txt_EPTS_4_pitch.txt.txt.txt', 
-    'data/tracks/fixcam/results/results/EPTS_5_pitch.txt_EPTS_6_pitch.txt.txt_EPTS_7_pitch.txt_EPTS_8_pitch.txt.txt.txt',
-    'data/tracks/fixcam/results/results/EPTS_1_pitch.txt_EPTS_2_pitch.txt.txt_EPTS_3_pitch.txt_EPTS_4_pitch.txt.txt.txt'])
+        'data/tracks/fixcam/reid/results/EPTS_1_team_pitch_reid.txt_EPTS_2_team_pitch_reid.txt.txt',
+    'data/tracks/fixcam/reid/results/EPTS_3_team_pitch_reid.txt_EPTS_4_team_pitch_reid.txt.txt', 
+    'data/tracks/fixcam/reid/results/EPTS_5_team_pitch_reid.txt_EPTS_6_team_pitch_reid.txt.txt', 
+    'data/tracks/fixcam/reid/results/EPTS_7_team_pitch_reid.txt_EPTS_8_team_pitch_reid.txt.txt',
+    'data/tracks/fixcam/reid/results/results/EPTS_1_team_pitch_reid.txt_EPTS_2_team_pitch_reid.txt.txt_EPTS_3_team_pitch_reid.txt_EPTS_4_team_pitch_reid.txt.txt.txt', 
+    'data/tracks/fixcam/reid/results/results/EPTS_5_team_pitch_reid.txt_EPTS_6_team_pitch_reid.txt.txt_EPTS_7_team_pitch_reid.txt_EPTS_8_team_pitch_reid.txt.txt.txt',
+    'data/tracks/fixcam/reid/results/results/results/EPTS_1_team_pitch_reid.txt_EPTS_2_team_pitch_reid.txt.txt_EPTS_3_team_pitch_reid.txt_EPTS_4_team_pitch_reid.txt.txt.txt_EPTS_5_team_pitch_reid.txt_EPTS_6_team_pitch_reid.txt.txt_EPTS_7_team_pitch_reid.txt_EPTS_8_team_pitch_reid.txt.txt.txt.txt'])
+
+    # a.add_argument("--predlist", nargs="+", default=[
+    #     'data/tracks/fixcam/results/EPTS_2_pitch.txt_EPTS_6_pitch.txt.txt',
+    # 'data/tracks/fixcam/results/EPTS_3_pitch.txt_EPTS_5_pitch.txt.txt', 
+    # 'data/tracks/fixcam/results/EPTS_1_pitch.txt_EPTS_8_pitch.txt.txt', 
+    # 'data/tracks/fixcam/results/EPTS_4_pitch.txt_EPTS_7_pitch.txt.txt',
+    # 'data/tracks/fixcam/results/results/EPTS_2_pitch.txt_EPTS_6_pitch.txt.txt_EPTS_3_pitch.txt_EPTS_5_pitch.txt.txt.txt', 
+    # 'data/tracks/fixcam/results/results/EPTS_1_pitch.txt_EPTS_8_pitch.txt.txt_EPTS_4_pitch.txt_EPTS_7_pitch.txt.txt.txt',
+    # 'data/tracks/fixcam/results/results/results/EPTS_2_pitch.txt_EPTS_6_pitch.txt.txt_EPTS_3_pitch.txt_EPTS_5_pitch.txt.txt.txt_EPTS_1_pitch.txt_EPTS_8_pitch.txt.txt_EPTS_4_pitch.txt_EPTS_7_pitch.txt.txt.txt.txt'])
 
     # if x = -x
     a.add_argument('--fixcam', help="use fix cam mode", action='store_true')
@@ -89,7 +99,9 @@ def main(args):
         sns.boxplot(data=all_errors, showfliers=False, palette='Set3')
         ax.set_title('Boxplot of 3D position errors of tracking results (8 fixed cameras)')
         ax.set_ylabel('Error (m)')
+        ax.set_ylim(-0.5, 7.5)
         ax.set_xticklabels(['12', '34', '56', '78', '1-4', '5-8', '1-8'])
+        # ax.set_xticklabels(['26', '35', '18', '47', '2635', '1847', '1-8'])
         plt.setp(ax.artists, edgecolor = 'k', facecolor='w')
         plt.setp(ax.lines, color='k')
         plt.show()

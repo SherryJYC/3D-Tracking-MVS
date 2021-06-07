@@ -25,14 +25,14 @@ def config():
     a.add_argument('--doreid', action='store_true', help='whether to use reid')
     # a.add_argument("--camlist", nargs="+", default=['data/tracks/cam1_filtered_team_pitch.txt', 
     #                                         'data/tracks/right_filtered_team_pitch.txt'])
-    a.add_argument("--camlist", nargs="+", default=['data/tracks/fixcam/EPTS_1_pitch.txt', 
-                                            'data/tracks/fixcam/EPTS_2_pitch.txt', 
-                                            'data/tracks/fixcam/EPTS_3_pitch.txt', 
-                                            'data/tracks/fixcam/EPTS_4_pitch.txt', 
-                                            'data/tracks/fixcam/EPTS_5_pitch.txt',
-                                            'data/tracks/fixcam/EPTS_6_pitch.txt',
-                                            'data/tracks/fixcam/EPTS_7_pitch.txt',
-                                            'data/tracks/fixcam/EPTS_8_pitch.txt'])
+    a.add_argument("--camlist", nargs="+", default=['data/tracks/fixcam/reid/EPTS_1_team_pitch_reid.txt', 
+                                            'data/tracks/fixcam/reid/EPTS_2_team_pitch_reid.txt', 
+                                            'data/tracks/fixcam/reid/EPTS_3_team_pitch_reid.txt',  
+                                            'data/tracks/fixcam/reid/EPTS_4_team_pitch_reid.txt',  
+                                            'data/tracks/fixcam/reid/EPTS_5_team_pitch_reid.txt', 
+                                            'data/tracks/fixcam/reid/EPTS_6_team_pitch_reid.txt', 
+                                            'data/tracks/fixcam/reid/EPTS_7_team_pitch_reid.txt', 
+                                            'data/tracks/fixcam/reid/EPTS_8_team_pitch_reid.txt'])
 
     args = a.parse_args()
     return args

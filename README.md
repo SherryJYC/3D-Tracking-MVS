@@ -1,8 +1,8 @@
-# 3D-Tracking-MVS
+# 3D Player Tracking with Multi-View Stream
 Project for 3DV 2021 Spring @ ETH Zurich [[Report Link]()] <br/>
 <br/>
 This repo contains a full pipeline to support 3D position tracking of soccer players, with multi-view calibrated moving/fixed video sequences as inputs. 
-- In single-camera tracking stage, Tracktor++ is used to get 2D positions
+- In single-camera tracking stage, Tracktor++ is used to get 2D positions.
 - In multi-camera tracking stage, 2D positions are projected into 3D positions. Then across-camera association is achieved as an optimization problem with spatial, temporal and visual constraints.
 - In the end, visualization in 2D, 3D and a voronoi visualization for sports coaching purpose are provided.
 
@@ -92,7 +92,7 @@ python src/runMCTRacker.py --doreid
 
 - Run multi-cam tracker (e.g. 8 cams)
 ```
-python src/runTreeMCTracker.py 
+python src/runTreeMCTracker.py --doreid
 ```
 
 ## Evaluation
@@ -163,7 +163,7 @@ We would like to thank the following Github repos or softwares: <br/>
 - [Tracktor++](https://github.com/phil-bergmann/tracking_wo_bnw)
 - [IoU tracker](https://github.com/GBJim/iou_tracker)
 - [SORT](https://github.com/abewley/sort)
-- [Foot crunching (footyviz)](https://medium.com/football-crunching)
+- [Football crunching (footyviz)](https://medium.com/football-crunching)
 - [Pymotmetrics](https://github.com/cheind/py-motmetrics)
 
 ## Authors
