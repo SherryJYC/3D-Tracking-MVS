@@ -74,8 +74,11 @@ Jiao Ying ???
 - Convert tracking results to coordinates on the pitch
 > Equation to find the intersection of a line with a plane ([ref](https://math.stackexchange.com/questions/2041296/algorithm-for-line-in-plane-intersection-in-3d))
 
-```
+```shell
 python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --xymode --reid
+
+# also plot the camera positions for fixed cameras
+python src/calib.py --calib_path=PATH_TO_CALIB --res_path=PATH_TO_TRACKING_RESULT --viz
 ```
 ## Across-camera association
 
@@ -97,11 +100,13 @@ python src/runTreeMCTracker.py
 - Produce quatitative results (visualize results)
 > visualize 2d bounding box
 
-```
+```shell
 # if format <x, y, w, h>
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/16m_right_prediction.txt 
 # if format <x1, y1, x2, y2>
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/iou/16m_right.txt --xymode
+# if with team id
+python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/16m_right_prediction.txt --reid
 # if 3d mode
 python src/utils/visualize.py --img_dir=data/0125-0135/RIGHT/img --result_file=output/tracktor/RIGHT.txt --calib_file=data/calibration_results/0125-0135/RIGHT/calib.txt  --pitchmode
 ```

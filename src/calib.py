@@ -18,7 +18,7 @@ color_list = [(0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255),
               (128, 255, 0), (0, 255, 128), (255, 128, 0), (255, 0, 128),
               (128, 128, 255), (128, 255, 128), (255, 128, 128), (128, 128, 0),
               (128, 0, 128)]
-team_color_list = [(255,255,255), (0,0,255), (0,255,0), (255,0,0)]
+team_color_list = [(255,255,255), (0,0,255), (0,255,0), (255,0,0), (255, 255, 0)]
 
 origin = np.array([0, 0, 0])
 theta = np.linspace(0, 2. * np.pi, 50)
@@ -210,6 +210,8 @@ def display_cameras_on_pitch(bboxs, cams, keys, imgname):
     # colors = iter([plt.cm.Paired(i) for i in range(len(cams))])
     colors = []
     for bbox, cam, key in zip(bboxs, cams, keys):
+        bbox *= -1
+        cam *= -1
         # clr = next(colors)
         
         if int(key) % 4 == 0:
@@ -222,7 +224,6 @@ def display_cameras_on_pitch(bboxs, cams, keys, imgname):
             clr = 'gray'
         plt.scatter(cam[0], cam[1], c=clr)
         plt.annotate('Camera '+key, (cam[0], cam[1]))
-
         # plot the lines
         for coord in bbox:
             # line = np.vstack([cam, coord])
@@ -304,8 +305,8 @@ if __name__ == "__main__":
     print(W, H)
 
     corners = [[0, 0, 1], [0, H, 1], [W, H, 1], [W, 0, 1]]
-    # cam_list = ["1","2","3","4","5","6","7","8"]
-    cam_list = ["2","5","6"]
+    cam_list = ["1","2","3","4","5","6","7","8"]
+    # cam_list = ["7","8"]
 
     # result_file = '/scratch2/wuti/Others/3DVision/test_result_filtered_team/16m_right_filtered_team.txt'
     result_file = opt.res_path
@@ -329,7 +330,10 @@ if __name__ == "__main__":
         with open(calib_file) as f:
             calib = json.load(f)
         # get corresponding camera calibrations
-        imgname = os.path.basename(result_file).split('.')[0].split('_')[-1]
+        if opt.reid:
+            imgname = os.path.basename(result_file).split('.')[0].split('_')[-2]
+        else:
+            imgname = os.path.basename(result_file).split('.')[0].split('_')[-1]
         K = np.array(calib[imgname]["K"]).reshape(3,3)
         R = np.array(calib[imgname]["R"]).reshape(3,3)
         T = np.array(calib[imgname]["T"]).reshape(3,1)
@@ -411,7 +415,7 @@ if __name__ == "__main__":
                     bbox.append([tx, ty])
                 bboxs.append(np.array(bbox))
 
-            display_cameras_on_pitch(bboxs, cams, keys, 'fixed_cameras_on_pitch_256.png')
+            display_cameras_on_pitch(bboxs, cams, keys, 'fixed_cameras_on_pitch.png')
 
     # # visualize tracking result
     # # result_file = '/scratch2/wuti/Others/3DVision/cam1_result_filtered_team/cam1_right_team.txt'

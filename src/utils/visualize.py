@@ -26,7 +26,7 @@ from mov2static import computeP, Rx, Ry
 FPS = 30
 color_list = [(0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (0, 255, 255), (255, 255, 0), (128, 0, 255), 
 (0, 128, 255), (128, 255, 0), (0, 255, 128), (255, 128, 0), (255, 0, 128), (128, 128, 255), (128, 255, 128), (255, 128, 128), (128, 128, 0), (128, 0, 128)]
-
+team_color_list = [(255,255,255), (0,0,255), (0,255,0), (255,0,0)]
 '''
 visualize tracking results and save to video
 
@@ -55,6 +55,8 @@ def config():
     a.add_argument('--vis_calib_file', default=None, type=str, help='path to the calibration file of the camera to be visualized')
     a.add_argument('--vis_result_file', default=None, type=str, help='path to the tracking result file of the camera to be visualized')
     
+    # visualize reid with team classification
+    a.add_argument('--reid', action='store_true', help='color code tracking results with the team id')
     args = a.parse_args()
     
     return args
@@ -220,8 +222,10 @@ def main(args):
     H, W, _ = skimage.io.imread(img_list[0]).shape
     
     # load tracking result file
-    track = np.genfromtxt(args.result_file,delimiter=',',usecols=(1,2,3,4,5)).astype(int)
-#    track = np.genfromtxt(args.result_file,delimiter=',',usecols=(1, 2,3,4,5, 7)).astype(int)
+    if args.reid:
+        track = np.genfromtxt(args.result_file,delimiter=',',usecols=(1,2,3,4,5,10)).astype(int)
+    else:
+        track = np.genfromtxt(args.result_file,delimiter=',',usecols=(1,2,3,4,5)).astype(int)
     frameidxcol = np.genfromtxt(args.result_file,delimiter=',',usecols=(0)).astype(int)
 
     # if want to visualize the tracking results of the other camera, also read the results
@@ -352,16 +356,25 @@ def main(args):
             img = cv2.imread(img_list[i])
             frameidx = int(os.path.basename(img_list[i]).split('.')[0][5:]) - minframeid
             track_cur = track[frameidxcol==frameidx]
+            # print(track_cur)
             
             for line in track_cur:
                 if args.xymode:
                     x1, y1, x2, y2 = line[1], line[2], line[3], line[4]
                 else:
                     x1, y1, x2, y2 = line[1], line[2], line[1]+line[3], line[2]+line[4]
+                
                 trace_id = line[0]
                 draw_trace_id = str(trace_id)
-                draw_caption(img, (x1, y1, x2, y2), draw_trace_id, color=color_list[trace_id % len(color_list)])
-                cv2.rectangle(img, (x1, y1), (x2, y2), color=color_list[trace_id % len(color_list)], thickness=2)
+                clr = color_list[trace_id % len(color_list)]
+
+                # color code the tracking results with the respective team id
+                if args.reid:
+                    team_id = line[-1]
+                    # print(team_id)
+                    clr = team_color_list[team_id % len(team_color_list)]
+                draw_caption(img, (x1, y1, x2, y2), draw_trace_id, color=clr)
+                cv2.rectangle(img, (x1, y1), (x2, y2), color=clr, thickness=2)
             
             # visualize the tracking results of the other camera
             if (args.vis_calib_file is not None) and (args.vis_result_file is not None):
