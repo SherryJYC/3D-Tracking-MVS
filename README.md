@@ -1,5 +1,8 @@
 # 3D Player Tracking with Multi-View Stream
-Project for 3DV 2021 Spring @ ETH Zurich [[Report Link]()] <br/>
+Project for 3DV 2021 Spring @ ETH Zurich <br/>
+<!--
+[[Report Link]()] <br/>
+-->
 <br/>
 This repo contains a full pipeline to support 3D position tracking of soccer players, with multi-view calibrated moving/fixed video sequences as inputs. 
 - In single-camera tracking stage, Tracktor++ is used to get 2D positions.
