@@ -12,7 +12,9 @@ This repo contains a full pipeline to support 3D position tracking of soccer pla
 <img alt="demo" src="https://github.com/SherryJYC/3D-Tracking-MVS/blob/main/misc/cam1_right_team.gif" width="400" height="250" />  |  <img alt="demo" src="https://github.com/SherryJYC/3D-Tracking-MVS/blob/main/misc/cam1_right_team_gt_voronoi.gif" width="400" height="250" />
 
 ## Demo
-To run the demos, please download the required data from [this link](https://polybox.ethz.ch/index.php/s/SrBn2DtKEJQaWFg) and place the folder inside this repository
+Check demo scripts as examples
+> Currently, processed data is under protection due to legal issues. 
+
 - Run the demo visualization on the moving cameras
 ```shell
 bash script/demo_moving.sh
@@ -69,10 +71,11 @@ data
 > only include homography and config files, large image folder not included
 -->
 ## Single-camera tracking
-- Object Detector: frcnn_fpn
-Train object detector and generate detection results with [this](https://colab.research.google.com/drive/18CI160namP1-sF82H6sgrDycvHZ1PbPm?usp=sharing) Google Colab notebook. The trained model can be downloaded through [this link](https://polybox.ethz.ch/index.php/s/SrBn2DtKEJQaWFg?path=%2Ftrained_frcnn_fpn).
-- Run Tracktor++
-Put trainded object detector ```model_epoch_50.model``` into  ```src/tracking_wo_bnw/output/faster_rcnn_fpn_training_soccer/```. Put data and calibration results into ```src/tracking_wo_bnw/```. 
+- Object Detector: frcnn_fpn <br/>
+Train object detector and generate detection results with [this](https://colab.research.google.com/drive/18CI160namP1-sF82H6sgrDycvHZ1PbPm?usp=sharing) Google Colab notebook. [[pretrained model](https://polybox.ethz.ch/index.php/s/SrBn2DtKEJQaWFg?path=%2Ftrained_frcnn_fpn)]
+- Run Tracktor++ <br/>
+Put trainded object detector ```model_epoch_50.model``` into  ```src/tracking_wo_bnw/output/faster_rcnn_fpn_training_soccer/```. <br/>
+Put data and calibration results into ```src/tracking_wo_bnw/```. 
 ```
 cd src/tracking_wo_bnw
 python experiments/scripts/test_tracktor.py
