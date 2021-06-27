@@ -2,9 +2,9 @@
 Project for 3DV 2021 Spring @ ETH Zurich [[Report Link](./document/3dtracking_report_2021.pdf)] <br/>
 
 <br/>
-This repo contains a full pipeline to support 3D position tracking of soccer players, with multi-view calibrated moving/fixed video sequences as inputs. 
-- In single-camera tracking stage, Tracktor++ is used to get 2D positions.
-- In multi-camera tracking stage, 2D positions are projected into 3D positions. Then across-camera association is achieved as an optimization problem with spatial, temporal and visual constraints.
+This repo contains a full pipeline to support 3D position tracking of soccer players, with multi-view calibrated moving/fixed video sequences as inputs.  <br/>
+- In single-camera tracking stage, Tracktor++ is used to get 2D positions. <br/>
+- In multi-camera tracking stage, 2D positions are projected into 3D positions. Then across-camera association is achieved as an optimization problem with spatial, temporal and visual constraints. <br/>
 - In the end, visualization in 2D, 3D and a voronoi visualization for sports coaching purpose are provided.
 
 3D Tracking            |  Sports Coaching 
